@@ -6,11 +6,10 @@ namespace MyEngine2D.Core.Factory
     {
         public static T CreateComponent<T>(GameObject context) where T : Component
         {
-            var component = Activator.CreateInstance<T>();
-            component.Initialize(context);
-            component.Create();
+            var componentType = typeof(T);
+            var component = Activator.CreateInstance(componentType, context) as T;
 
-            return component;
+            return component ?? throw new InvalidOperationException($"Can't create {nameof(Component)} of type {componentType}.");
         }
     }
 }

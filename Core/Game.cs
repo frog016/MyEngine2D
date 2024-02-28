@@ -1,48 +1,34 @@
-﻿using MyEngine2D.Core.Helper;
+﻿using MyEngine2D.Core.Level;
 
 namespace MyEngine2D.Core;
 
-public sealed class Game : Singleton<Game>
+public sealed class Game
 {
-    public SceneLevel CurrentLevel { get; private set; }
+    public readonly Time Time;
+    public readonly GameLevelManager LevelManager;
+    public CancellationToken StoppedCancellationToken => _stopLoopSource.Token;
 
-    private readonly List<SceneLevel> _levels = new();
+    private readonly CancellationTokenSource _stopLoopSource;
 
-    private CancellationTokenSource _stopLoopSource;
-
-    private const double FixedUpdateTimestamp = 1 / 30d;
-
-    public void Initialize(List<SceneLevel> levels)
+    internal Game(Time time, GameLevelManager levelManager)
     {
-        CurrentLevel = levels[0];
-        _levels.AddRange(levels);
+        Time = time;
+        LevelManager = levelManager;
+
+        _stopLoopSource = new CancellationTokenSource();
     }
 
     public void Start()
     {
-        _stopLoopSource = new CancellationTokenSource();
-
-        var startTime = DateTime.Now;
-        var previousTime = 0d;
-        var accumulator = 0d;
-
+        Time.Initialize();
         while (_stopLoopSource.IsCancellationRequested == false)
         {
-            var currentTime = GetCurrentTime(startTime);
-            var deltaTime = currentTime - previousTime;
-            accumulator += deltaTime;
+            Time.Tick();
 
             //ProcessInput();
-            Update(deltaTime);
-
-            while (accumulator >= FixedUpdateTimestamp)
-            {
-                FixedUpdate();
-                accumulator -= FixedUpdateTimestamp;
-            }
-
+            Update(Time.DeltaTime);
+            FixedUpdate();
             //Render();
-            previousTime = currentTime;
         }
     }
 
@@ -51,25 +37,22 @@ public sealed class Game : Singleton<Game>
         _stopLoopSource.Cancel();
     }
 
-    public void LoadLevel(string name)
-    {
-        CurrentLevel = _levels.First(level => level.Name == name);
-    }
-
     private void Update(double deltaTime)
     {
-        foreach (var gameObject in CurrentLevel.GameObjects)
+        foreach (var gameObject in LevelManager.CurrentLevel.GameObjects)
             gameObject.UpdateObject((float)deltaTime);
     }
 
     private void FixedUpdate()
     {
-        foreach (var gameObject in CurrentLevel.GameObjects)
-            gameObject.FixedUpdateObject((float)FixedUpdateTimestamp);
-    }
+        while (Time.LagFixedTime >= Time.FixedUpdateTimestamp)
+        {
+            foreach (var gameObject in LevelManager.CurrentLevel.GameObjects)
+            {
+                gameObject.FixedUpdateObject(Time.FixedUpdateTimestamp);
+            }
 
-    private static double GetCurrentTime(DateTime startTime)
-    {
-        return DateTime.Now.Subtract(startTime).TotalSeconds;
+            Time.CatchUpLag();
+        }
     }
 }

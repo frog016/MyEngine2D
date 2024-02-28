@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core;
 using MyEngine2D.Core.Entity;
+using MyEngine2D.Core.Level;
 
 namespace MyEngine2D
 {
@@ -13,23 +14,26 @@ namespace MyEngine2D
 
         private static Game CreateTestGame()
         {
-            var testLevel = new SceneLevel("Test Level");
+            var testLevel = new GameLevel("Test Level");
             var testGameObject = testLevel.Instantiate("Test Object");
             testGameObject.AddComponent<TestLogComponent>();
 
-            var levels = new List<SceneLevel>()
+            var levels = new List<GameLevel>()
             {
                 testLevel
             };
 
-            var game = Game.Instance;
-            game.Initialize(levels);
-
-            return game;
+            return new GameBuilder()
+                .WithCustomLevels(levels)
+                .Build();
         }
 
         public class TestLogComponent : Component
         {
+            public TestLogComponent(GameObject gameObject) : base(gameObject)
+            {
+            }
+
             public override void Update(float deltaTime)
             {
                 Console.WriteLine($"Update for {GameObject.Name} - deltaTime: {deltaTime}.");

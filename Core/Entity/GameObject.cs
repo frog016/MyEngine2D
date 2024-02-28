@@ -49,7 +49,7 @@ namespace MyEngine2D.Core.Entity
                 return;
 
             _components.Remove(component);
-            component.Delete();
+            component.OnDestroy();
         }
 
         public T? GetComponent<T>() where T : Component
@@ -66,7 +66,7 @@ namespace MyEngine2D.Core.Entity
         public void Dispose()
         {
             foreach (var component in _components)
-                component.Delete();
+                component.OnDestroy();
 
             _components.Clear();
         }
