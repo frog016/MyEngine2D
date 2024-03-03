@@ -11,14 +11,27 @@ namespace MyEngine2D.Core.Entity
 
         private readonly List<Component> _components;
 
+        private bool _isStarted;
+
         public GameObject(string name, Vector2 position = default, float rotation = default, params Component[] components)
         {
             Name = name;
             _components = components.ToList();
 
-            Transform = AddComponent<TransformComponent>();
+            Transform = ComponentFactory.CreateComponent<TransformComponent>(this);
             Transform.Position = position;
             Transform.Rotation = rotation;
+
+            _components.Add(Transform);
+        }
+
+
+        public void Start()
+        {
+            foreach (var component in _components)
+                component.Start();
+
+            _isStarted = true;
         }
 
         public void UpdateObject(float deltaTime)
@@ -36,9 +49,10 @@ namespace MyEngine2D.Core.Entity
         public T AddComponent<T>() where T : Component
         {
             var component = ComponentFactory.CreateComponent<T>(this);
-
             _components.Add(component);
-            component.Start();
+
+            if (_isStarted)
+                component.Start();
 
             return component;
         }
