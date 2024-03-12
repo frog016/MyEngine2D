@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
+using MyEngine2D.Core.Resource;
 using MyEngine2D.Core.Utility;
 
 namespace MyEngine2D.Core;
@@ -49,15 +50,12 @@ public sealed class GameBuilder
         var time = new Time();
         var levelManager = CreateLevelManager();
         var inputSystem = CreateInputSystem();
+        var game = new Game(time, levelManager, inputSystem);
 
+        RegisterGameServices(time, levelManager, inputSystem, game);
         Clear();
-        return new Game(time, levelManager, inputSystem);
-    }
 
-    private void Clear()
-    {
-        _levels.Clear();
-        _inputActions.Clear();
+        return game;
     }
 
     private GameLevelManager CreateLevelManager()
@@ -73,5 +71,21 @@ public sealed class GameBuilder
             inputSystem.AddInput(inputAction);
 
         return inputSystem;
+    }
+
+    private static void RegisterGameServices(Time time, GameLevelManager levelManager, InputSystem inputSystem, Game game)
+    {
+        ServiceLocator.Instance.RegisterInstance(time);
+        ServiceLocator.Instance.RegisterInstance(levelManager);
+        ServiceLocator.Instance.RegisterInstance(inputSystem);
+        ServiceLocator.Instance.RegisterInstance(game);
+
+        ServiceLocator.Instance.Register<ResourceManager>();
+    }
+
+    private void Clear()
+    {
+        _levels.Clear();
+        _inputActions.Clear();
     }
 }

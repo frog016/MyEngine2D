@@ -1,11 +1,57 @@
-﻿namespace MyEngine2D.Core.Utility;
+﻿using System.Reflection;
+
+namespace MyEngine2D.Core.Utility;
 
 internal static class ReflectionUtility
 {
-    public static IEnumerable<Type> GetAllChild(this Type type)
+    private static readonly Dictionary<Type, FieldInfo[]> FieldsMap = new();
+    private static readonly Dictionary<Type, PropertyInfo[]> PropertiesMap = new();
+    private static readonly Dictionary<Type, MethodInfo[]> MethodsMap = new();
+    private static readonly Dictionary<MethodBase, ParameterInfo[]> ParametersMap = new();
+
+    public const BindingFlags BindingAttributes = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+    public static FieldInfo[] GetFieldsCashed(Type type)
     {
-        return type.Assembly
-            .GetTypes()
-            .Where(t => type.IsAssignableFrom(t) && t.IsClass && t.IsAbstract == false);
+        if (FieldsMap.TryGetValue(type, out var fields))
+            return fields;
+
+        fields = type.GetFields(BindingAttributes);
+        FieldsMap.Add(type, fields);
+
+        return fields;
+    }
+
+    public static PropertyInfo[] GetPropertiesCashed(Type type)
+    {
+        if (PropertiesMap.TryGetValue(type, out var properties))
+            return properties;
+
+        properties = type.GetProperties(BindingAttributes);
+        PropertiesMap.Add(type, properties);
+
+        return properties;
+    }
+
+    public static MethodInfo[] GetMethodsCashed(Type type)
+    {
+        if (MethodsMap.TryGetValue(type, out var methods))
+            return methods;
+
+        methods = type.GetMethods(BindingAttributes);
+        MethodsMap.Add(type, methods);
+
+        return methods;
+    }
+
+    public static ParameterInfo[] GetParametersCached(MethodBase method)
+    {
+        if (ParametersMap.TryGetValue(method, out var parameters))
+            return parameters;
+
+        parameters = method.GetParameters();
+        ParametersMap.Add(method, parameters);
+
+        return parameters;
     }
 }

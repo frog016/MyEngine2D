@@ -8,40 +8,44 @@ namespace MyEngine2D
 {
     public class Program
     {
-        private static Game _game;
-
         public static void Main()
         {
-            _game = CreateTestGame();
-            _game.Run();
+            var game = CreateTestGame();
+            game.Run();
         }
 
         private static Game CreateTestGame()
         {
             var testLevel = new GameLevel("Test Level");
-            var testGameObject = testLevel.Instantiate("Test Object");
-            testGameObject.AddComponent<TestLogComponent>();
-
-            return new GameBuilder()
+            
+            var game = new GameBuilder()
                 .WithCustomLevels(testLevel)
                 .WithInputActions(new SpaceKeyboardInput())
                 .Build();
+
+            var testGameObject = testLevel.Instantiate("Test Object");
+            testGameObject.AddComponent<TestLogComponent>();
+
+            return game;
         }
 
         public class TestLogComponent : Component
         {
-            public TestLogComponent(GameObject gameObject) : base(gameObject)
+            private readonly InputSystem _inputSystem;
+
+            public TestLogComponent(GameObject gameObject, InputSystem inputSystem) : base(gameObject)
             {
+                _inputSystem = inputSystem;
             }
 
             public override void Start()
             {
-                _game.InputSystem.SubscribeInputListener<SpaceKeyboardInput>(OnSpaceKeyPressedDown);
+                _inputSystem.SubscribeInputListener<SpaceKeyboardInput>(OnSpaceKeyPressedDown);
             }
 
             public override void OnDestroy()
             {
-                _game.InputSystem.UnsubscribeInputListener<SpaceKeyboardInput>(OnSpaceKeyPressedDown);
+                _inputSystem.UnsubscribeInputListener<SpaceKeyboardInput>(OnSpaceKeyPressedDown);
             }
 
             public override void Update(float deltaTime)

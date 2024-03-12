@@ -3,7 +3,7 @@ using MyEngine2D.Core.Structure;
 
 namespace MyEngine2D.Core.Entity
 {
-    public class GameObject : IDisposable
+    public sealed class GameObject : IDisposable
     {
         public string Name { get; set; }
 

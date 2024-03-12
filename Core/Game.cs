@@ -5,35 +5,37 @@ namespace MyEngine2D.Core;
 
 public sealed class Game
 {
-    public readonly Time Time;
-    public readonly GameLevelManager LevelManager;
-    public readonly InputSystem InputSystem;
     public CancellationToken StoppedCancellationToken => _stopLoopSource.Token;
 
+    private readonly Time _time;
+    private readonly GameLevelManager _levelManager;
+    private readonly InputSystem _inputSystem;
     private readonly CancellationTokenSource _stopLoopSource;
 
     internal Game(Time time, GameLevelManager levelManager, InputSystem inputSystem)
     {
-        Time = time;
-        LevelManager = levelManager;
-        InputSystem = inputSystem;
+        _time = time;
+        _levelManager = levelManager;
+        _inputSystem = inputSystem;
 
         _stopLoopSource = new CancellationTokenSource();
     }
 
     public void Run()
     {
-        Time.Initialize();
+        _time.Initialize();
 
-        foreach (var gameObject in LevelManager.CurrentLevel.GameObjects)
+        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        {
             gameObject.Start();
+        }
 
         while (_stopLoopSource.IsCancellationRequested == false)
         {
-            Time.Tick();
+            _time.Tick();
 
             HandleInput();
-            Update(Time.DeltaTime);
+            Update(_time.DeltaTime);
             FixedUpdate();
             //Render();
         }
@@ -46,25 +48,27 @@ public sealed class Game
 
     private void HandleInput()
     {
-        InputSystem.UpdateInput();
+        _inputSystem.UpdateInput();
     }
 
     private void Update(double deltaTime)
     {
-        foreach (var gameObject in LevelManager.CurrentLevel.GameObjects)
+        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        {
             gameObject.UpdateObject((float)deltaTime);
+        }
     }
 
     private void FixedUpdate()
     {
-        while (Time.LagFixedTime >= Time.FixedUpdateTimestamp)
+        while (_time.LagFixedTime >= Time.FixedUpdateTimestamp)
         {
-            foreach (var gameObject in LevelManager.CurrentLevel.GameObjects)
+            foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
             {
                 gameObject.FixedUpdateObject(Time.FixedUpdateTimestamp);
             }
 
-            Time.CatchUpLag();
+            _time.CatchUpLag();
         }
     }
 }
