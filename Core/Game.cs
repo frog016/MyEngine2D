@@ -44,6 +44,7 @@ public sealed class Game
     public void Stop()
     {
         _stopLoopSource.Cancel();
+        ServiceLocator.Instance.Dispose();
     }
 
     private void HandleInput()

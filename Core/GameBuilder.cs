@@ -47,15 +47,24 @@ public sealed class GameBuilder
 
     public Game Build()
     {
+        var resourceManager = CreateResourceManager();
+
         var time = new Time();
         var levelManager = CreateLevelManager();
         var inputSystem = CreateInputSystem();
+
         var game = new Game(time, levelManager, inputSystem);
 
-        RegisterGameServices(time, levelManager, inputSystem, game);
+        RegisterGameServices(time, levelManager, inputSystem, game, resourceManager);
         Clear();
 
         return game;
+    }
+
+    private static ResourceManager CreateResourceManager()
+    {
+        var resourceManager = new ResourceManager();
+        return resourceManager;
     }
 
     private GameLevelManager CreateLevelManager()
@@ -73,14 +82,14 @@ public sealed class GameBuilder
         return inputSystem;
     }
 
-    private static void RegisterGameServices(Time time, GameLevelManager levelManager, InputSystem inputSystem, Game game)
+    private static void RegisterGameServices(Time time, GameLevelManager levelManager, InputSystem inputSystem,
+        Game game, ResourceManager resourceManager)
     {
         ServiceLocator.Instance.RegisterInstance(time);
         ServiceLocator.Instance.RegisterInstance(levelManager);
         ServiceLocator.Instance.RegisterInstance(inputSystem);
         ServiceLocator.Instance.RegisterInstance(game);
-
-        ServiceLocator.Instance.Register<ResourceManager>();
+        ServiceLocator.Instance.RegisterInstance(resourceManager);
     }
 
     private void Clear()

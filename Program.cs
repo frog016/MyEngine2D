@@ -17,7 +17,7 @@ namespace MyEngine2D
         private static Game CreateTestGame()
         {
             var testLevel = new GameLevel("Test Level");
-            
+
             var game = new GameBuilder()
                 .WithCustomLevels(testLevel)
                 .WithInputActions(new SpaceKeyboardInput())

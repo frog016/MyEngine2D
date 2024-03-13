@@ -3,7 +3,7 @@ using MyEngine2D.Core.Structure;
 
 namespace MyEngine2D.Core;
 
-public sealed class ServiceLocator : Singleton<ServiceLocator>, IServiceLocator
+public sealed class ServiceLocator : Singleton<ServiceLocator>, IServiceLocator, IDisposable
 {
     private readonly Dictionary<Type, object> _services = new();
 
@@ -65,6 +65,17 @@ public sealed class ServiceLocator : Singleton<ServiceLocator>, IServiceLocator
         catch (Exception exception)
         {
             throw new ServiceCreationException(serviceType, exception);
+        }
+    }
+
+    public void Dispose()
+    {
+        foreach (var service in _services.Values)
+        {
+            if (service is IDisposable disposableService)
+            {
+                disposableService.Dispose();
+            }
         }
     }
 
