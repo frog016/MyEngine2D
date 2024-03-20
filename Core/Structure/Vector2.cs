@@ -43,7 +43,13 @@ namespace MyEngine2D.Core.Structure
 
         #region Operations
 
-        public static float ScalarProduct(Vector2 first, Vector2 second)
+        public static float Distance(Vector2 first, Vector2 second)
+        {
+            var delta = first - second;
+            return delta.Length();
+        }
+
+        public static float DotProduct(Vector2 first, Vector2 second)
         {
             return first.X * second.X + first.Y * second.Y;
         }
@@ -51,6 +57,16 @@ namespace MyEngine2D.Core.Structure
         public static float CrossProduct(Vector2 first, Vector2 second)
         {
             return first.X * second.Y - first.Y * second.X;
+        }
+
+        public static Vector2 CrossProduct(Vector2 first, float scalar)
+        {
+            return new Vector2(scalar * first.Y, -scalar * first.X);
+        }
+
+        public static Vector2 CrossProduct(float scalar, Vector2 first)
+        {
+            return new Vector2(-scalar * first.Y, scalar * first.X);
         }
 
         #endregion
@@ -65,6 +81,11 @@ namespace MyEngine2D.Core.Structure
         public static Vector2 operator -(Vector2 first, Vector2 second)
         {
             return new Vector2(first.X - second.X, first.Y - second.Y);
+        }
+
+        public static Vector2 operator -(Vector2 vector)
+        {
+            return new Vector2(-vector.X, -vector.Y);
         }
 
         public static Vector2 operator *(Vector2 vector, float multiplier)

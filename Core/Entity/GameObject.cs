@@ -7,7 +7,7 @@ namespace MyEngine2D.Core.Entity
     {
         public string Name { get; set; }
 
-        public readonly TransformComponent Transform;
+        public readonly Transform Transform;
 
         private readonly List<Component> _components;
 
@@ -18,7 +18,7 @@ namespace MyEngine2D.Core.Entity
             Name = name;
             _components = components.ToList();
 
-            Transform = ComponentFactory.CreateComponent<TransformComponent>(this);
+            Transform = ComponentFactory.CreateComponent<Transform>(this);
             Transform.Position = position;
             Transform.Rotation = rotation;
 

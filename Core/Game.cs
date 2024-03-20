@@ -62,7 +62,7 @@ public sealed class Game
 
     private void FixedUpdate()
     {
-        while (_time.LagFixedTime >= Time.FixedUpdateTimestamp)
+        while (_time.NeedToCatchUpLag())
         {
             foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
             {
