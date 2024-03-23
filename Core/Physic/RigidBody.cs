@@ -16,18 +16,21 @@ public sealed class RigidBody : Component
     public float AngularVelocity { get; private set; }
     public float Mass { get; private set; }
     public float InverseMass { get; private set; }
+    public float Inertia => Shape.Inertia;
+    public float InverseInertia => 1 / Shape.Inertia;
+
+    public Vector2 Position { get => GameObject.Transform.Position; set => GameObject.Transform.Position = value; }
 
     public const float Gravity = 9.80665f;
 
-    private float _force;
-    private float _acceleration;
-    private float _toruqe;
+    private Vector2 _externalForce;
+    private float _torque;
 
     public RigidBody(GameObject gameObject) : base(gameObject)
     {
     }
 
-    public void Initialize(IPhysicShape shape, PhysicMaterial material, 
+    public void Initialize(IPhysicShape shape, PhysicMaterial material,
         float gravityScale = 1f, bool isStatic = false)
     {
         Shape = shape;
@@ -39,9 +42,50 @@ public sealed class RigidBody : Component
         InverseMass = 1 / Mass;
     }
 
-    public void ApplyLinearImpulse(Vector2 impulse)
+    public void ApplyImpulse(Vector2 impulse, Vector2 contactVector)
     {
         LinearVelocity += InverseMass * impulse;
+        AngularVelocity += InverseInertia * Vector2.CrossProduct(contactVector, impulse);
+    }
+
+    public void ApplyForce(Vector2 force, Vector2 point)
+    {
+        _externalForce += force;
+        _torque += Vector2.CrossProduct(point - Position, force);
+    }
+
+    internal void UpdateBodyPhysic(float fixedDeltaTime)
+    {
+        if (IsStatic)
+            return;
+
+        UpdateGravity(fixedDeltaTime);
+        UpdateForces(fixedDeltaTime);
+        UpdateVelocity(fixedDeltaTime);
+    }
+
+    internal void ResetForces()
+    {
+        _externalForce = Vector2.Zero;
+        _torque = 0;
+    }
+
+    private void UpdateGravity(float deltaTime)
+    {
+        LinearVelocity += Vector2.Down * ScaledGravity * deltaTime;
+    }
+
+    private void UpdateForces(float deltaTime)
+    {
+        LinearVelocity += _externalForce * InverseMass * deltaTime;
+        AngularVelocity += _torque * InverseInertia * deltaTime;
+    }
+
+    private void UpdateVelocity(float deltaTime)
+    {
+        var transform = GameObject.Transform;
+        transform.Position += LinearVelocity * deltaTime;
+        transform.Rotation += AngularVelocity * deltaTime;
     }
 
     private static float CalculateBodyMass(IPhysicShape shape, PhysicMaterial material)

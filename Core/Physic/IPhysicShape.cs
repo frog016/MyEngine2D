@@ -1,6 +1,5 @@
 ﻿namespace MyEngine2D.Core.Physic;
 
-//  TODO: Подумать над даннымы, которые возвращаются при успешном пересечении
 public interface IPhysicShape : ICollisionVisitor
 {
     float Volume { get; }
