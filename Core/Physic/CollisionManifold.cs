@@ -8,7 +8,7 @@ public readonly struct CollisionManifold
     public readonly float Depth;
     public readonly Vector2[] ContactPoints;
 
-    public CollisionManifold(Vector2 normal, float depth, Vector2[] contactPoints)
+    public CollisionManifold(Vector2 normal, float depth, params Vector2[] contactPoints)
     {
         Normal = normal;
         Depth = depth;

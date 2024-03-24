@@ -20,6 +20,7 @@ public sealed class RigidBody : Component
     public float InverseInertia => 1 / Shape.Inertia;
 
     public Vector2 Position { get => GameObject.Transform.Position; set => GameObject.Transform.Position = value; }
+    public float Rotation { get => GameObject.Transform.Rotation; set => GameObject.Transform.Rotation = value; }
 
     public const float Gravity = 9.80665f;
 
@@ -60,8 +61,8 @@ public sealed class RigidBody : Component
             return;
 
         UpdateGravity(fixedDeltaTime);
-        UpdateForces(fixedDeltaTime);
-        UpdateVelocity(fixedDeltaTime);
+        UpdateVelocities(fixedDeltaTime);
+        UpdateTransform(fixedDeltaTime);
     }
 
     internal void ResetForces()
@@ -75,13 +76,13 @@ public sealed class RigidBody : Component
         LinearVelocity += Vector2.Down * ScaledGravity * deltaTime;
     }
 
-    private void UpdateForces(float deltaTime)
+    private void UpdateVelocities(float deltaTime)
     {
         LinearVelocity += _externalForce * InverseMass * deltaTime;
         AngularVelocity += _torque * InverseInertia * deltaTime;
     }
 
-    private void UpdateVelocity(float deltaTime)
+    private void UpdateTransform(float deltaTime)
     {
         var transform = GameObject.Transform;
         transform.Position += LinearVelocity * deltaTime;

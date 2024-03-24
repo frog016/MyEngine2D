@@ -2,6 +2,18 @@
 {
     public static class Math2D
     {
+        public const float PI = (float)System.Math.PI;
+
+        public static float ToRadians(float angleDegrees)
+        {
+            return angleDegrees * PI / 180;
+        }
+
+        public static float ToDegrees(float angleRadians)
+        {
+            return angleRadians * 180 / PI;
+        }
+
         public static float Sqrt(float value)
         {
             return (float)System.Math.Sqrt(value);
@@ -35,6 +47,16 @@
         public static int Clamp(int value, int min, int max)
         {
             return System.Math.Clamp(value, min, max);
+        }
+
+        public static float Sin(float angle)
+        {
+            return (float)System.Math.Sin(angle);
+        }
+
+        public static float Cos(float angle)
+        {
+            return (float)System.Math.Cos(angle);
         }
     }
 }

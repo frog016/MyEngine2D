@@ -1,8 +1,11 @@
-﻿namespace MyEngine2D.Core.Physic;
+﻿using MyEngine2D.Core.Structure;
+
+namespace MyEngine2D.Core.Physic;
 
 public interface IPhysicShape : ICollisionVisitor
 {
     float Volume { get; }
     float Inertia { get; }
-    bool IntersectWith(IPhysicShape otherShape);
+    CollisionManifold? IntersectWith(IPhysicShape otherShape);
+    AxisAlignedBoundingBox GetBoundingBox();
 }

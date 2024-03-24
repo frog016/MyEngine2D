@@ -26,22 +26,38 @@ namespace MyEngine2D.Core.Structure
             Y = vector.Y;
         }
 
-        public float Length()
+        public readonly float Length()
         {
             return Math2D.Sqrt(X * X + Y * Y);
         }
 
-        public Vector2 Normalize()
+        public readonly Vector2 Normalize()
         {
             return this / Length();
         }
 
-        public override string ToString()
+        public readonly override string ToString()
         {
             return $"X: {X}, Y: {Y}";
         }
 
         #region Operations
+
+        public readonly Vector2 Rotate(float angle, bool radian = true)
+        {
+            angle = radian ? angle : Math2D.ToRadians(angle);
+
+            var x = Math2D.Cos(angle) * X - Math2D.Sin(angle) * Y;
+            var y = Math2D.Sin(angle) * X + Math2D.Cos(angle) * Y;
+
+            return new Vector2(x, y);
+        }
+
+        public readonly Vector2 RotateAround(Vector2 origin, float angle, bool radian = true)
+        {
+            var rotatedVector = (this - origin).Rotate(angle, radian);
+            return rotatedVector + origin;
+        }
 
         public static float Distance(Vector2 first, Vector2 second)
         {
@@ -67,6 +83,11 @@ namespace MyEngine2D.Core.Structure
         public static Vector2 CrossProduct(float scalar, Vector2 first)
         {
             return new Vector2(-scalar * first.Y, scalar * first.X);
+        }
+
+        public static Vector2 MultiplyComponentwise(Vector2 first, Vector2 second)
+        {
+            return new Vector2(first.X * second.X, first.Y * second.Y);
         }
 
         #endregion

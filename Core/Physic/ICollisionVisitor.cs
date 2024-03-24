@@ -2,6 +2,6 @@
 
 public interface ICollisionVisitor
 {
-    bool Intersect(RectanglePhysicShape rectangle);
-    bool Intersect(CirclePhysicShape circle);
+    CollisionManifold? Intersect(RectanglePhysicShape rectangle);
+    CollisionManifold? Intersect(CirclePhysicShape circle);
 }
