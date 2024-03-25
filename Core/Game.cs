@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
+using MyEngine2D.Core.Physic;
 
 namespace MyEngine2D.Core;
 
@@ -10,13 +11,16 @@ public sealed class Game
     private readonly Time _time;
     private readonly GameLevelManager _levelManager;
     private readonly InputSystem _inputSystem;
+    private readonly PhysicWorld _physicWorld;
+
     private readonly CancellationTokenSource _stopLoopSource;
 
-    internal Game(Time time, GameLevelManager levelManager, InputSystem inputSystem)
+    internal Game(Time time, GameLevelManager levelManager, InputSystem inputSystem, PhysicWorld physicWorld)
     {
         _time = time;
         _levelManager = levelManager;
         _inputSystem = inputSystem;
+        _physicWorld = physicWorld;
 
         _stopLoopSource = new CancellationTokenSource();
     }
@@ -64,6 +68,8 @@ public sealed class Game
     {
         while (_time.NeedToCatchUpLag())
         {
+            _physicWorld.UpdatePhysic(Time.FixedUpdateTimestamp);
+
             foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
             {
                 gameObject.FixedUpdateObject(Time.FixedUpdateTimestamp);

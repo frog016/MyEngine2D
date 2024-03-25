@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
+using MyEngine2D.Core.Physic;
 using MyEngine2D.Core.Resource;
 using MyEngine2D.Core.Utility;
 
@@ -52,8 +53,9 @@ public sealed class GameBuilder
         var time = new Time();
         var levelManager = CreateLevelManager();
         var inputSystem = CreateInputSystem();
+        var physicWorld = new PhysicWorld(levelManager);
 
-        var game = new Game(time, levelManager, inputSystem);
+        var game = new Game(time, levelManager, inputSystem, physicWorld);
 
         RegisterGameServices(time, levelManager, inputSystem, game, resourceManager);
         Clear();
