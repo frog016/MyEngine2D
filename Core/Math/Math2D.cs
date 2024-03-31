@@ -58,5 +58,10 @@
         {
             return (float)System.Math.Cos(angle);
         }
+
+        public static int RoundToInt(float value)
+        {
+            return (int)System.Math.Round(value);
+        }
     }
 }

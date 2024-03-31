@@ -1,7 +1,9 @@
-﻿using MyEngine2D.Core.Input;
+﻿using MyEngine2D.Core.Graphic;
+using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
 using MyEngine2D.Core.Physic;
 using MyEngine2D.Core.Resource;
+using MyEngine2D.Core.Structure;
 using MyEngine2D.Core.Utility;
 
 namespace MyEngine2D.Core;
@@ -54,13 +56,20 @@ public sealed class GameBuilder
         var levelManager = CreateLevelManager();
         var inputSystem = CreateInputSystem();
         var physicWorld = new PhysicWorld(levelManager);
+        var graphicRender = CreateGraphicRender(levelManager);
 
-        var game = new Game(time, levelManager, inputSystem, physicWorld);
+        var game = new Game(time, levelManager, inputSystem, physicWorld, graphicRender);
 
         RegisterGameServices(time, levelManager, inputSystem, game, resourceManager);
         Clear();
 
         return game;
+    }
+
+    private static GraphicRender CreateGraphicRender(GameLevelManager levelManager)
+    {
+        var description = new GraphicWindowDescription(1920, 1080);
+        return new GraphicRender(levelManager, description);
     }
 
     private static ResourceManager CreateResourceManager()

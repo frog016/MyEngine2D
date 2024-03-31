@@ -84,5 +84,10 @@ namespace MyEngine2D.Core.Entity
 
             _components.Clear();
         }
+
+        public override string ToString()
+        {
+            return $"GameObject: {Name}";
+        }
     }
 }

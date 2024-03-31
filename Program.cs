@@ -1,16 +1,18 @@
 ﻿using MyEngine2D.Core;
 using MyEngine2D.Core.Entity;
-using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
-using SharpDX.DirectInput;
+using MyEngine2D.Core.Math;
+using MyEngine2D.Core.Physic;
+using MyEngine2D.Core.Structure;
 
 namespace MyEngine2D
 {
     public class Program
     {
+        [STAThread]
         public static void Main()
         {
-            var game = CreateTestGame();
+            using var game = CreateTestGame();
             game.Run();
         }
 
@@ -20,53 +22,66 @@ namespace MyEngine2D
 
             var game = new GameBuilder()
                 .WithCustomLevels(testLevel)
-                .WithInputActions(new SpaceKeyboardInput())
+                .WithInputActions()
                 .Build();
 
-            var testGameObject = testLevel.Instantiate("Test Object");
-            testGameObject.AddComponent<TestLogComponent>();
+            CreateGroundRectangle(testLevel);
+
+            for (var index = 0; index < 1; index++)
+                CreateTestCircles(testLevel, index);
 
             return game;
         }
 
-        public class TestLogComponent : Component
+        private static void CreateTestCircles(GameLevel testLevel, int index = 0)
         {
-            private readonly InputSystem _inputSystem;
+            const float maxRadius = 50;
+            var screenCenter = new Vector2(1920 / 10f, 1080 / 2f) + Vector2.Right * index * 2.5f * maxRadius;
 
-            public TestLogComponent(GameObject gameObject, InputSystem inputSystem) : base(gameObject)
-            {
-                _inputSystem = inputSystem;
-            }
+            var testGameObject = testLevel.Instantiate($"Test Object: {index}.", screenCenter);
+            var body = testGameObject.AddComponent<RigidBody>();
 
-            public override void Start()
-            {
-                _inputSystem.SubscribeInputListener<SpaceKeyboardInput>(OnSpaceKeyPressedDown);
-            }
+            var radius = Random.Shared.NextSingle() * maxRadius;
+            var shape = new CirclePhysicShape(body, radius);
 
-            public override void OnDestroy()
-            {
-                _inputSystem.UnsubscribeInputListener<SpaceKeyboardInput>(OnSpaceKeyPressedDown);
-            }
+            var ironDensity = 7874f;
+            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.5f);
 
-            public override void Update(float deltaTime)
-            {
-                //Console.WriteLine($"Update for {GameObject.Name} - deltaTime: {deltaTime}.");
-            }
+            body.Initialize(shape, ironMaterial);
 
-            public override void FixedUpdate(float fixedDeltaTime)
-            {
-                //Console.WriteLine($"FixedUpdate for {GameObject.Name} - fixedDeltaTime: {fixedDeltaTime}.");
-            }
-
-            private void OnSpaceKeyPressedDown()
-            {
-                Console.WriteLine($"Space button was pressed.");
-            }
+            testGameObject.AddComponent<DebugComponent>();
         }
 
-        public class SpaceKeyboardInput : KeyboardInputAction
+        private static void CreateGroundRectangle(GameLevel testLevel)
         {
-            protected override Key TriggeredKey => Key.Space;
+            var position = new Vector2(1920 / 2f, 1080 / 10f);
+            var size = new Vector2(1920, 100);
+
+            var testGameObject = testLevel.Instantiate($"Test Ground.", position);
+            var body = testGameObject.AddComponent<RigidBody>();
+
+            var shape = new RectanglePhysicShape(body, size);
+
+            var ironDensity = 7874f;
+            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.5f);
+
+            body.Initialize(shape, ironMaterial, 0, true);
+            
+            //testGameObject.AddComponent<DebugComponent>();
+        }
+    }
+
+    public class DebugComponent : Component
+    {
+        public DebugComponent(GameObject gameObject) : base(gameObject)
+        {
+        }
+
+        public override void FixedUpdate(float fixedDeltaTime)
+        {
+            base.FixedUpdate(fixedDeltaTime);
+
+            Console.WriteLine($"Object: {GameObject.Name} in position: {GameObject.Transform.Position}.");
         }
     }
 }

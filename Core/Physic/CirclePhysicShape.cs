@@ -40,7 +40,7 @@ public sealed class CirclePhysicShape : IPhysicShape
 
     public AxisAlignedBoundingBox GetBoundingBox()
     {
-        var halfSize = Vector2.One * Radius / 2f;
+        var halfSize = Vector2.One * Radius;
         return new AxisAlignedBoundingBox(Center - halfSize, Center + halfSize);
     }
 }

@@ -67,9 +67,10 @@ public static class PhysicMath2D
         Vector2 circleCenter, float circleRadius)
     {
         var rotatedCircleCenter = circleCenter.RotateAround(rectCenter, -rectRotation);
+        var rectHalfSize = rectSize / 2;
 
-        var closestX = Math2D.Clamp(rotatedCircleCenter.X, rectCenter.X, rectCenter.X + rectSize.X);
-        var closestY = Math2D.Clamp(rotatedCircleCenter.Y, rectCenter.Y, rectCenter.Y + rectSize.Y);
+        var closestX = Math2D.Clamp(rotatedCircleCenter.X, rectCenter.X - rectHalfSize.X, rectCenter.X + rectHalfSize.X);
+        var closestY = Math2D.Clamp(rotatedCircleCenter.Y, rectCenter.Y - rectHalfSize.Y, rectCenter.Y + rectHalfSize.Y);
         var closestPoint = new Vector2(closestX, closestY);
 
         var closestDistance = Vector2.Distance(rotatedCircleCenter, closestPoint);

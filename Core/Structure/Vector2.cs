@@ -1,4 +1,5 @@
 ﻿using MyEngine2D.Core.Math;
+using SharpDX.Mathematics.Interop;
 
 namespace MyEngine2D.Core.Structure
 {
@@ -33,7 +34,11 @@ namespace MyEngine2D.Core.Structure
 
         public readonly Vector2 Normalize()
         {
-            return this / Length();
+            var length = Length();
+            if (length == 0)
+                return Zero;
+
+            return this / length;
         }
 
         public readonly override string ToString()

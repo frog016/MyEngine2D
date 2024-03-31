@@ -1,10 +1,11 @@
-﻿using MyEngine2D.Core.Input;
+﻿using MyEngine2D.Core.Graphic;
+using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
 using MyEngine2D.Core.Physic;
 
 namespace MyEngine2D.Core;
 
-public sealed class Game
+public sealed class Game : IDisposable
 {
     public CancellationToken StoppedCancellationToken => _stopLoopSource.Token;
 
@@ -12,28 +13,50 @@ public sealed class Game
     private readonly GameLevelManager _levelManager;
     private readonly InputSystem _inputSystem;
     private readonly PhysicWorld _physicWorld;
+    private readonly GraphicRender _graphicRender;
 
     private readonly CancellationTokenSource _stopLoopSource;
 
-    internal Game(Time time, GameLevelManager levelManager, InputSystem inputSystem, PhysicWorld physicWorld)
+    internal Game(
+        Time time, GameLevelManager levelManager, InputSystem inputSystem,
+        PhysicWorld physicWorld, GraphicRender graphicRender)
     {
         _time = time;
         _levelManager = levelManager;
         _inputSystem = inputSystem;
         _physicWorld = physicWorld;
+        _graphicRender = graphicRender;
 
         _stopLoopSource = new CancellationTokenSource();
     }
 
     public void Run()
     {
+        InitializeGame();
+        RunLoop();
+    }
+
+    public void Dispose()   //  TODO: Добавить вызов Dispose
+    {
+        _stopLoopSource.Cancel();
+
+        _graphicRender.Dispose();
+        ServiceLocator.Instance.Dispose();
+    }
+
+    private void InitializeGame()
+    {
         _time.Initialize();
+        _graphicRender.Run();
 
         foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
         {
             gameObject.Start();
         }
+    }
 
+    private void RunLoop()
+    {
         while (_stopLoopSource.IsCancellationRequested == false)
         {
             _time.Tick();
@@ -41,14 +64,8 @@ public sealed class Game
             HandleInput();
             Update(_time.DeltaTime);
             FixedUpdate();
-            //Render();
+            Render();
         }
-    }
-
-    public void Stop()
-    {
-        _stopLoopSource.Cancel();
-        ServiceLocator.Instance.Dispose();
     }
 
     private void HandleInput()
@@ -77,5 +94,10 @@ public sealed class Game
 
             _time.CatchUpLag();
         }
+    }
+
+    private void Render()
+    {
+        _graphicRender.Render();
     }
 }
