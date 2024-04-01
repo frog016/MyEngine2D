@@ -55,6 +55,11 @@ public sealed class PhysicWorld
     {
         foreach (var body in physicBodies)
         {
+            if (body.IsStatic)
+            {
+                continue;
+            }
+
             foreach (var otherBody in physicBodies)
             {
                 if (body == otherBody)
@@ -107,7 +112,7 @@ public sealed class PhysicWorld
 
     private static void CorrectCollisionContactPositions(Contact contact)
     {
-        const float depthCorrectPercent = 0.25f;
+        const float depthCorrectPercent = 0.45f;
 
         var first = contact.First;
         var second = contact.Second;
@@ -115,7 +120,7 @@ public sealed class PhysicWorld
 
         var correction = manifold.Depth / (first.InverseMass + second.InverseMass) * manifold.Normal * depthCorrectPercent;
 
-        first.Position -= correction * first.InverseMass;
-        second.Position += correction * second.InverseMass;
+        first.CorrectContactPosition(correction);
+        second.CorrectContactPosition(-correction);
     }
 }

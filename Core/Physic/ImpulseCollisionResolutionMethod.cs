@@ -26,8 +26,8 @@ public sealed class ImpulseCollisionResolutionMethod : ICollisionResolutionMetho
         var secondContactVector = contactPoint - second.Position;
 
         var relativeVelocity =
-            second.LinearVelocity + Vector2.CrossProduct(second.AngularVelocity, secondContactVector) -
-            first.LinearVelocity - Vector2.CrossProduct(first.AngularVelocity, firstContactVector);
+            first.LinearVelocity + Vector2.CrossProduct(first.AngularVelocity, firstContactVector) -
+            second.LinearVelocity - Vector2.CrossProduct(second.AngularVelocity, secondContactVector);
 
         var firstImpulseArgs = new PhysicMath2D.ImpulseArgs(firstContactVector, first.InverseMass, first.InverseInertia);
         var secondImpulseArgs = new PhysicMath2D.ImpulseArgs(secondContactVector, second.InverseMass, second.InverseInertia);

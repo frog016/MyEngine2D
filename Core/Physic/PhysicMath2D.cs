@@ -31,7 +31,7 @@ public static class PhysicMath2D
         var lowerEquationPart =
             first.InverseMass + second.InverseMass +
             Math2D.Sqr(Vector2.CrossProduct(first.ContactVector, normal)) * first.InverseInertia +
-            Math2D.Sqr(Vector2.CrossProduct(second.ContactVector, normal)) * second.InverseInertia; ;
+            Math2D.Sqr(Vector2.CrossProduct(second.ContactVector, normal)) * second.InverseInertia;
 
         return upperEquationPart / lowerEquationPart;
     }

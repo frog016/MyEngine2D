@@ -43,4 +43,9 @@ public sealed class CirclePhysicShape : IPhysicShape
         var halfSize = Vector2.One * Radius;
         return new AxisAlignedBoundingBox(Center - halfSize, Center + halfSize);
     }
+
+    public override string ToString()
+    {
+        return $"[Circle] Radius: {Radius}";
+    }
 }

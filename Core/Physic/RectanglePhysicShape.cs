@@ -55,4 +55,9 @@ public sealed class RectanglePhysicShape : IPhysicShape
         var max = new Vector2(xCoordinates.Max(), yCoordinates.Max());
         return new AxisAlignedBoundingBox(min, max);
     }
+
+    public override string ToString()
+    {
+        return $"[Rectangle] Size: {Size}, Rotation: {Rotation}";
+    }
 }

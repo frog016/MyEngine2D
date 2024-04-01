@@ -9,6 +9,9 @@ namespace MyEngine2D
 {
     public class Program
     {
+        private const float MinSize = 10f;
+        private const float MaxSize = 25;
+
         [STAThread]
         public static void Main()
         {
@@ -27,29 +30,55 @@ namespace MyEngine2D
 
             CreateGroundRectangle(testLevel);
 
-            for (var index = 0; index < 1; index++)
-                CreateTestCircles(testLevel, index);
+            var startPosition = new Vector2(100, 1080 / 2f);
+            for (var index = 0; index < 20; )
+            {
+                var currentPosition = NextPosition(index);
+                CreateTestCircle(testLevel, currentPosition, index);
+                index++;
+
+                currentPosition = NextPosition(index);
+                CreateTestRectangle(testLevel, currentPosition, index);
+                index++;
+            }
 
             return game;
+
+            Vector2 NextPosition(int index)
+            {
+                return startPosition + Vector2.Right * index * MaxSize;
+            }
         }
 
-        private static void CreateTestCircles(GameLevel testLevel, int index = 0)
+        private static void CreateTestCircle(GameLevel testLevel, Vector2 position, int index)
         {
-            const float maxRadius = 50;
-            var screenCenter = new Vector2(1920 / 10f, 1080 / 2f) + Vector2.Right * index * 2.5f * maxRadius;
+            var gameObject = testLevel.Instantiate($"Circle Object: {index}.", position);
+            var rigidBody = gameObject.AddComponent<RigidBody>();
 
-            var testGameObject = testLevel.Instantiate($"Test Object: {index}.", screenCenter);
-            var body = testGameObject.AddComponent<RigidBody>();
-
-            var radius = Random.Shared.NextSingle() * maxRadius;
-            var shape = new CirclePhysicShape(body, radius);
+            var randomRadius = GetRandomSize() / 2f;
+            var shape = new CirclePhysicShape(rigidBody, randomRadius);
 
             var ironDensity = 7874f;
-            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.5f);
+            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.75f);
 
-            body.Initialize(shape, ironMaterial);
+            rigidBody.Initialize(shape, ironMaterial);
+        }
 
-            testGameObject.AddComponent<DebugComponent>();
+        private static void CreateTestRectangle(GameLevel testLevel, Vector2 position, int index)
+        {
+            var gameObject = testLevel.Instantiate($"Rect Object: {index}.", position);
+            var rigidBody = gameObject.AddComponent<RigidBody>();
+
+            var randomSize = new Vector2(GetRandomSize(), GetRandomSize());
+            var randomRotation = GetRandomSize(0, 360);
+
+            rigidBody.Rotation = randomRotation;
+            var shape = new RectanglePhysicShape(rigidBody, randomSize);
+
+            var ironDensity = 7874f;
+            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.75f);
+
+            rigidBody.Initialize(shape, ironMaterial);
         }
 
         private static void CreateGroundRectangle(GameLevel testLevel)
@@ -59,15 +88,19 @@ namespace MyEngine2D
 
             var testGameObject = testLevel.Instantiate($"Test Ground.", position);
             var body = testGameObject.AddComponent<RigidBody>();
-            
+
             var shape = new RectanglePhysicShape(body, size);
 
             var ironDensity = 7874f;
-            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.5f);
+            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.75f);
 
-            body.Initialize(shape, ironMaterial, 0, true);
-            
-            //testGameObject.AddComponent<DebugComponent>();
+            body.Initialize(shape, ironMaterial, gravityScale: 0, isStatic: true);
+        }
+
+        private static float GetRandomSize(float min = MinSize, float max = MaxSize)
+        {
+            var unClampedSize = Random.Shared.NextSingle() * max;
+            return Math2D.Clamp(unClampedSize, min, max);
         }
     }
 

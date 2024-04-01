@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core.Entity;
 using MyEngine2D.Core.Structure;
+using System.Collections.Generic;
 
 namespace MyEngine2D.Core.Physic;
 
@@ -27,11 +28,14 @@ public sealed class RigidBody : Component
     private Vector2 _externalForce;
     private float _torque;
 
+    private ComputeMassMode _computeMassMode;
+
     public RigidBody(GameObject gameObject) : base(gameObject)
     {
     }
 
     public void Initialize(IPhysicShape shape, PhysicMaterial material,
+        float manuallyMass = 0f, ComputeMassMode massMode = ComputeMassMode.ByShape, 
         float gravityScale = 1f, bool isStatic = false)
     {
         Shape = shape;
@@ -39,20 +43,49 @@ public sealed class RigidBody : Component
         IsStatic = isStatic;
         GravityScale = gravityScale;
 
-        Mass = CalculateBodyMass(shape, material);
-        InverseMass = 1 / Mass;
+        SetMassMode(massMode);
+        SetMass(manuallyMass);
     }
 
     public void ApplyImpulse(Vector2 impulse, Vector2 contactVector)
     {
+        if (IsStatic)
+            return;
+
         LinearVelocity += InverseMass * impulse;
         AngularVelocity += InverseInertia * Vector2.CrossProduct(contactVector, impulse);
     }
 
     public void ApplyForce(Vector2 force, Vector2 point)
     {
+        if (IsStatic)
+            return;
+
         _externalForce += force;
         _torque += Vector2.CrossProduct(point - Position, force);
+    }
+
+    public void SetMass(float value = default)
+    {
+        var mass = _computeMassMode switch
+        {
+            ComputeMassMode.ByShape => CalculateBodyMass(Shape, Material),
+            ComputeMassMode.Manually => value,
+            _ => throw new ArgumentOutOfRangeException(nameof(_computeMassMode))
+        };
+
+        Mass = mass;
+        InverseMass = 1 / mass;
+    }
+
+    public void SetMassMode(ComputeMassMode mode)
+    {
+        _computeMassMode = mode;
+    }
+
+    public override string ToString()
+    {
+        return $"[Body] Parent: {GameObject.Name}, Shape: {Shape}";
     }
 
     internal void UpdateBodyPhysic(float fixedDeltaTime)
@@ -63,6 +96,14 @@ public sealed class RigidBody : Component
         UpdateGravity(fixedDeltaTime);
         UpdateVelocities(fixedDeltaTime);
         UpdateTransform(fixedDeltaTime);
+    }
+
+    internal void CorrectContactPosition(Vector2 correction)
+    {
+        if (IsStatic)
+            return;
+
+        Position += correction * InverseMass;
     }
 
     internal void ResetForces()
