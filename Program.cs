@@ -59,7 +59,7 @@ namespace MyEngine2D
 
             var testGameObject = testLevel.Instantiate($"Test Ground.", position);
             var body = testGameObject.AddComponent<RigidBody>();
-
+            
             var shape = new RectanglePhysicShape(body, size);
 
             var ironDensity = 7874f;

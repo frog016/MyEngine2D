@@ -18,6 +18,7 @@ internal sealed class GraphicRender : IDisposable
     private readonly RenderForm _window;
     private readonly RenderLoop _renderLoop;
     private readonly RenderTarget _renderTarget;
+    private readonly DX2D1.Factory _factory;
     private readonly Brush _brush;
 
     private static readonly SharpDX.Color DefaultBackgroundColor = new(32, 103, 176);
@@ -33,6 +34,8 @@ internal sealed class GraphicRender : IDisposable
         };
 
         _renderLoop = new RenderLoop(_window);
+        _factory = new DX2D1.Factory();
+
         _renderTarget = InitializeRenderingDevice();
         _brush = new SolidColorBrush(_renderTarget, DefaultShapeColor);
     }
@@ -59,8 +62,9 @@ internal sealed class GraphicRender : IDisposable
     {
         _window.Dispose();
         _renderLoop.Dispose();
-
         _renderTarget.Dispose();
+        _factory.Dispose();
+        _brush.Dispose();
     }
 
     private RenderTarget InitializeRenderingDevice()
@@ -71,15 +75,19 @@ internal sealed class GraphicRender : IDisposable
         var hwndRenderTargetProperties = new HwndRenderTargetProperties()
         {
             Hwnd = _window.Handle,
-            PixelSize = new Size2(_window.Width, _window.Height)
+            PixelSize = new Size2(_window.Width, _window.Height),
         };
 
-        using var factory = new DX2D1.Factory();
-        return new WindowRenderTarget(factory, renderTargetProperties, hwndRenderTargetProperties);
+        var renderTarget = new WindowRenderTarget(_factory, renderTargetProperties, hwndRenderTargetProperties);
+        renderTarget.Transform =
+            Matrix3x2.Scaling(1, -1) *
+            Matrix3x2.Translation(0, _window.Height);
+
+        return renderTarget;
     }
 
     [Obsolete("Test realization for physic. Replace this after testing.")]  //  TODO:
-    private void TestDrawGameObjects()  //  TODO: Нужно добавить переворот по Y. Сейчас при отрисовке Y растет вниз.
+    private void TestDrawGameObjects()
     {
         foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
         {
@@ -109,16 +117,19 @@ internal sealed class GraphicRender : IDisposable
     private void DrawRectangle(RectanglePhysicShape rectangleShape)
     {
         var center = rectangleShape.Center;
-
-        var rotationMatrix = Matrix3x2.Rotation(rectangleShape.Rotation, center.ToDXVector2()); //  TODO: Этот поворот не работает. Найти другой способ рисовать повернутый прямоугольник.
-        _renderTarget.Transform = rotationMatrix;
+        var rectHalfSize = rectangleShape.Size / 2f;
 
         var rectangle = new RawRectangleF(
-            center.X - rectangleShape.Size.X / 2,
-            center.Y + rectangleShape.Size.Y / 2,
-            center.X + rectangleShape.Size.X / 2,
-            center.Y - rectangleShape.Size.Y / 2);
+            center.X - rectHalfSize.X,
+            center.Y + rectHalfSize.Y,
+            center.X + rectHalfSize.X,
+            center.Y - rectHalfSize.Y);
 
-        _renderTarget.FillRectangle(rectangle, _brush);
+        using var rectGeometry = new RectangleGeometry(_factory, rectangle);
+
+        var rotationMatrix = Matrix3x2.Rotation(rectangleShape.Rotation, center.ToDXVector2());
+        using var transformedRect = new TransformedGeometry(_factory, rectGeometry, rotationMatrix);
+
+        _renderTarget.FillGeometry(transformedRect, _brush);
     }
 }
