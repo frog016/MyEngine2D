@@ -26,9 +26,13 @@ public sealed class RectanglePhysicShape : IPhysicShape
 
     public CollisionManifold? Intersect(RectanglePhysicShape rectangle)
     {
-        return PhysicMath2D.IntersectRectangleWithRectangle(
-            Center, Size, Rotation,
-            rectangle.Center, rectangle.Size, rectangle.Rotation);
+        var manifold = PhysicMath2D.IntersectRectangleWithRectangle(
+            rectangle.Center, rectangle.Size, rectangle.Rotation,
+            Center, Size, Rotation);
+
+        return manifold.HasValue 
+            ? new CollisionManifold(-manifold.Value.Normal, manifold.Value.Depth, manifold.Value.ContactPoints) 
+            : manifold;
     }
 
     public CollisionManifold? Intersect(CirclePhysicShape circle)

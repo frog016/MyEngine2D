@@ -9,8 +9,10 @@ namespace MyEngine2D
 {
     public class Program
     {
-        private const float MinSize = 10f;
-        private const float MaxSize = 25;
+        private static readonly PhysicMaterial IronMaterial = new(7874f, 0.3f, 0.1f, 0.6f);
+
+        private const float MinSize = 40f;
+        private const float MaxSize = 65;
 
         [STAThread]
         public static void Main()
@@ -21,6 +23,9 @@ namespace MyEngine2D
 
         private static Game CreateTestGame()
         {
+            const float sizeX = 1920f;
+            const float sizeY = 1080f;
+
             var testLevel = new GameLevel("Test Level");
 
             var game = new GameBuilder()
@@ -28,25 +33,43 @@ namespace MyEngine2D
                 .WithInputActions()
                 .Build();
 
-            CreateGroundRectangle(testLevel);
+            var yGround = -370f;
 
-            var startPosition = new Vector2(100, 1080 / 2f);
-            for (var index = 0; index < 20; )
+            var groundPosition = new Vector2(sizeX / 6, yGround);
+            var rotation = Math2D.ToRadians(-10);
+            CreateGroundRectangle(groundPosition, rotation, 0, testLevel);
+
+            groundPosition = new Vector2(5 * sizeX / 6, yGround);
+            rotation = Math2D.ToRadians(10);
+            CreateGroundRectangle(groundPosition, rotation, 1, testLevel);
+
+            var startPosition = new Vector2(100, sizeY / 3f);
+            var endPosition = new Vector2(sizeX - 100, sizeY / 3f);
+            for (var index = 0; index < 2; )
             {
-                var currentPosition = NextPosition(index);
-                CreateTestCircle(testLevel, currentPosition, index);
+                //var currentPosition = ToRight(index);
+                var currentPosition = new Vector2(sizeX / 3 - MaxSize / 2f * 0.9f, sizeY);
+                //CreateTestCircle(testLevel, currentPosition, index);
+                CreateTestRectangle(testLevel, currentPosition, index);
                 index++;
 
-                currentPosition = NextPosition(index);
-                CreateTestRectangle(testLevel, currentPosition, index);
+                //currentPosition = ToLeft(index);
+                currentPosition = new Vector2(2 * sizeX / 3 + MaxSize / 2f * 0.9f, sizeY);
+                //CreateTestCircle(testLevel, currentPosition, index);
+                //CreateTestRectangle(testLevel, currentPosition, index);
                 index++;
             }
 
             return game;
 
-            Vector2 NextPosition(int index)
+            Vector2 ToRight(int index)
             {
                 return startPosition + Vector2.Right * index * MaxSize;
+            }
+
+            Vector2 ToLeft(int index)
+            {
+                return endPosition + Vector2.Left * index * MaxSize;
             }
         }
 
@@ -55,13 +78,10 @@ namespace MyEngine2D
             var gameObject = testLevel.Instantiate($"Circle Object: {index}.", position);
             var rigidBody = gameObject.AddComponent<RigidBody>();
 
-            var randomRadius = GetRandomSize() / 2f;
+            var randomRadius = MaxSize / 2f; //GetRandomSize() / 2f;
             var shape = new CirclePhysicShape(rigidBody, randomRadius);
 
-            var ironDensity = 7874f;
-            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.75f);
-
-            rigidBody.Initialize(shape, ironMaterial);
+            rigidBody.Initialize(shape, IronMaterial);//, 10, ComputeMassMode.Manually);
         }
 
         private static void CreateTestRectangle(GameLevel testLevel, Vector2 position, int index)
@@ -70,31 +90,23 @@ namespace MyEngine2D
             var rigidBody = gameObject.AddComponent<RigidBody>();
 
             var randomSize = new Vector2(GetRandomSize(), GetRandomSize());
-            var randomRotation = GetRandomSize(0, 360);
+            var randomRotation = GetRandomSize(0, 2 * Math2D.PI);
 
             rigidBody.Rotation = randomRotation;
             var shape = new RectanglePhysicShape(rigidBody, randomSize);
 
-            var ironDensity = 7874f;
-            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.75f);
-
-            rigidBody.Initialize(shape, ironMaterial);
+            rigidBody.Initialize(shape, IronMaterial); //10, ComputeMassMode.Manually);
         }
 
-        private static void CreateGroundRectangle(GameLevel testLevel)
+        private static void CreateGroundRectangle(Vector2 position, float rotation, int index, GameLevel testLevel)
         {
-            var position = new Vector2(1920 / 2f, 1080 / 10f);
-            var size = new Vector2(1920, 100);
-
-            var testGameObject = testLevel.Instantiate($"Test Ground.", position);
+            var testGameObject = testLevel.Instantiate($"Test Ground {index}.", position, rotation);
             var body = testGameObject.AddComponent<RigidBody>();
 
+            var size = new Vector2(1920, 1000);
             var shape = new RectanglePhysicShape(body, size);
 
-            var ironDensity = 7874f;
-            var ironMaterial = new PhysicMaterial(ironDensity, 0.2f, 0.1f, 0.75f);
-
-            body.Initialize(shape, ironMaterial, gravityScale: 0, isStatic: true);
+            body.Initialize(shape, IronMaterial, gravityScale: 0, isStatic: true);
         }
 
         private static float GetRandomSize(float min = MinSize, float max = MaxSize)

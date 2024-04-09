@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core.Math;
 using MyEngine2D.Core.Structure;
+using System.Collections.Generic;
 
 namespace MyEngine2D.Core.Physic;
 
@@ -25,9 +26,7 @@ public sealed class ImpulseCollisionResolutionMethod : ICollisionResolutionMetho
         var firstContactVector = contactPoint - first.Position;
         var secondContactVector = contactPoint - second.Position;
 
-        var relativeVelocity =
-            first.LinearVelocity + Vector2.CrossProduct(first.AngularVelocity, firstContactVector) -
-            second.LinearVelocity - Vector2.CrossProduct(second.AngularVelocity, secondContactVector);
+        var relativeVelocity = ComputeRelativeVelocity(first, firstContactVector, second, secondContactVector);
 
         var firstImpulseArgs = new PhysicMath2D.ImpulseArgs(firstContactVector, first.InverseMass, first.InverseInertia);
         var secondImpulseArgs = new PhysicMath2D.ImpulseArgs(secondContactVector, second.InverseMass, second.InverseInertia);
@@ -42,13 +41,15 @@ public sealed class ImpulseCollisionResolutionMethod : ICollisionResolutionMetho
         int contactCount)
     {
         var elasticity = Math2D.Min(first.Material.Elasticity, second.Material.Elasticity);
-        var impulseScalar = PhysicMath2D.ComputeCollisionImpulse(relativeVelocity, contactNormal, elasticity,
+        
+        var impulseScalar = PhysicMath2D.ComputeCollisionImpulse(
+            relativeVelocity, contactNormal, elasticity,
             firstImpulseArgs, secondImpulseArgs);
 
         var impulse = contactNormal * impulseScalar / contactCount;
 
-        first.ApplyImpulse(impulse, firstImpulseArgs.ContactVector);
-        second.ApplyImpulse(-impulse, secondImpulseArgs.ContactVector);
+        first.ApplyImpulse(-impulse, firstImpulseArgs.ContactVector);
+        second.ApplyImpulse(impulse, secondImpulseArgs.ContactVector);
 
         return impulseScalar;
     }
@@ -76,7 +77,15 @@ public sealed class ImpulseCollisionResolutionMethod : ICollisionResolutionMetho
 
         tangentImpulse /= contactCount;
 
-        first.ApplyImpulse(tangentImpulse, firstImpulseArgs.ContactVector);
-        second.ApplyImpulse(-tangentImpulse, secondImpulseArgs.ContactVector);
+        first.ApplyImpulse(-tangentImpulse, firstImpulseArgs.ContactVector);
+        second.ApplyImpulse(tangentImpulse, secondImpulseArgs.ContactVector);
+    }
+
+    private static Vector2 ComputeRelativeVelocity(
+        RigidBody first, Vector2 firstContactVector,
+        RigidBody second, Vector2 secondContactVector)
+    {
+        return second.LinearVelocity + Vector2.CrossProduct(second.AngularVelocity, secondContactVector) - 
+            first.LinearVelocity - Vector2.CrossProduct(first.AngularVelocity, firstContactVector);
     }
 }

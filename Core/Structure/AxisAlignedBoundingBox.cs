@@ -4,7 +4,7 @@ public readonly struct AxisAlignedBoundingBox
 {
     public readonly Vector2 Min;
     public readonly Vector2 Max;
-
+    
     public AxisAlignedBoundingBox(Vector2 min, Vector2 max)
     {
         Min = min;

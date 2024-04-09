@@ -57,7 +57,7 @@ public static class PhysicMath2D
         return new CollisionManifold(normal, depth, contactPoint);
 
         Vector2 ComputeContactPoint()
-        {
+        { 
             return firstCenter + (firstRadius - depth / 2) * normal;
         }
     }
@@ -77,14 +77,15 @@ public static class PhysicMath2D
         if (closestDistance > circleRadius)
             return null;
 
-        var normalStartPoint = closestDistance == 0 ? rectCenter : closestPoint;
-        var normal = (rotatedCircleCenter - normalStartPoint)
+        var normalPoint = closestDistance == 0 ? rectCenter : closestPoint;
+        var normal = (normalPoint - rotatedCircleCenter)
             .Normalize()
             .Rotate(rectRotation);
 
         var depth = circleRadius - closestDistance;
+        var contactPoint = closestPoint.RotateAround(rectCenter, rectRotation);
 
-        return new CollisionManifold(normal, depth, closestPoint);
+        return new CollisionManifold(normal, depth, contactPoint);
     }
 
     internal static CollisionManifold? IntersectRectangleWithRectangle(
@@ -94,34 +95,56 @@ public static class PhysicMath2D
         var firstRect = new OrientedRectangle(firstRectCenter, firstRectSize, firstRectRotation);
         var secondRect = new OrientedRectangle(secondRectCenter, secondRectSize, secondRectRotation);
 
-        var axes = firstRect.GetEdgeNormals();
+        var firstVertices = firstRect.GetCornerVertices();
+        var secondVertices = secondRect.GetCornerVertices();
 
-        var minOverlap = float.MaxValue;
-        var normal = Vector2.Zero;
-
-        foreach (var axis in axes)
+        var (firstOverlap, firstNormal) = ProjectSecondRectOnFirstRectAxes(firstVertices, secondVertices, firstRect.GetEdgeNormals());
+        if (firstOverlap.HasValue == false)
         {
-            var (firstMin, firstMax) = ProjectVerticesOnAxis(axis, firstRect.GetCornerVertices());
-            var (secondMin, secondMax) = ProjectVerticesOnAxis(axis, secondRect.GetCornerVertices());
-
-            if (firstMax < secondMin || secondMax < firstMin)
-                return null;
-
-            var overlap = Math2D.Min(firstMax, secondMax) - Math2D.Max(firstMin, secondMin);
-            if (overlap >= minOverlap)
-                continue;
-
-            minOverlap = overlap;
-            normal = axis;
+            return null;
         }
+
+        var (secondOverlap, secondNormal) = ProjectSecondRectOnFirstRectAxes(secondVertices, firstVertices, secondRect.GetEdgeNormals());
+        if (secondOverlap.HasValue == false)
+        {
+            return null;
+        }
+
+        var (minOverlap, normal) = firstOverlap < secondOverlap 
+            ? (firstOverlap.Value, firstNormal) 
+            : (secondOverlap.Value, secondNormal);
 
         var contactPoint = GetContactPoint(firstRect, normal, minOverlap);
         return new CollisionManifold(normal, minOverlap, contactPoint);
 
+        static (float? minOverlap, Vector2 normal) ProjectSecondRectOnFirstRectAxes(Vector2[] firstRectVertices, Vector2[] secondRectVertices, Vector2[] firstRectAxes)
+        {
+            var minOverlap = float.MaxValue;
+            var normal = Vector2.Zero;
+
+            foreach (var axis in firstRectAxes)
+            {
+                var (firstMin, firstMax) = ProjectVerticesOnAxis(axis, firstRectVertices);
+                var (secondMin, secondMax) = ProjectVerticesOnAxis(axis, secondRectVertices);
+
+                if (firstMax < secondMin || secondMax < firstMin)
+                    return (null, Vector2.Zero);
+
+                var overlap = Math2D.Min(firstMax, secondMax) - Math2D.Max(firstMin, secondMin);
+                if (overlap >= minOverlap)
+                    continue;
+
+                minOverlap = overlap;
+                normal = axis;
+            }
+
+            return (minOverlap, normal);
+        }
+
         static (float min, float max) ProjectVerticesOnAxis(Vector2 axis, Vector2[] vertices)
         {
-            var min = 0f;
-            var max = 0f;
+            var min = float.MaxValue;
+            var max = float.MinValue;
 
             foreach (var vertex in vertices)
             {

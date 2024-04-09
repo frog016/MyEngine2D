@@ -34,8 +34,8 @@ public sealed class CirclePhysicShape : IPhysicShape
     public CollisionManifold? Intersect(CirclePhysicShape circle)
     {
         return PhysicMath2D.IntersectCircleWithCircle(
-            Center, Radius, 
-            circle.Center, circle.Radius);
+            circle.Center, circle.Radius,
+            Center, Radius);
     }
 
     public AxisAlignedBoundingBox GetBoundingBox()

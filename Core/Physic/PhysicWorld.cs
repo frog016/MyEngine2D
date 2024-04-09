@@ -1,10 +1,13 @@
 ﻿using MyEngine2D.Core.Level;
+using MyEngine2D.Core.Math;
 
 namespace MyEngine2D.Core.Physic;
 
 public sealed class PhysicWorld
 {
     private readonly GameLevelManager _levelManager;
+
+    private static readonly HashSet<(RigidBody, RigidBody)> CollidingBodyPairChache = new();
 
     private ICollisionResolutionMethod _collisionResolution = new ImpulseCollisionResolutionMethod();
 
@@ -50,6 +53,22 @@ public sealed class PhysicWorld
         }
     }
 
+    private IEnumerable<RigidBody> GetWorldPhysicObjects()
+    {
+        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        {
+            if (gameObject.TryGetComponent<RigidBody>(out var body))
+            {
+                yield return body;
+            }
+        }
+    }
+
+    private void ResolveCollision(Contact contact)
+    {
+        _collisionResolution.ResolveCollision(contact);
+    }
+
     //  Broad phase
     private static IEnumerable<(RigidBody first, RigidBody second)> GetPotentialCollidingObjectPairs(RigidBody[] physicBodies)
     {
@@ -81,8 +100,15 @@ public sealed class PhysicWorld
     //  Narrow phase
     private static IEnumerable<Contact> GetObjectCollisionContacts(IEnumerable<(RigidBody first, RigidBody second)> pairs)
     {
+        CollidingBodyPairChache.Clear();
+
         foreach (var (first, second) in pairs)
         {
+            if (IsPairAlreadyCollided(first, second))
+            {
+                continue;
+            }
+
             var firstShape = first.Shape;
             var secondShape = second.Shape;
 
@@ -94,33 +120,31 @@ public sealed class PhysicWorld
         }
     }
 
-    private IEnumerable<RigidBody> GetWorldPhysicObjects()
+    private static bool IsPairAlreadyCollided(RigidBody first, RigidBody second)
     {
-        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
-        {
-            if (gameObject.TryGetComponent<RigidBody>(out var body))
-            {
-                yield return body;
-            }
-        }
-    }
+        var pair = (first, second);
+        var reversPair = (second, first);
 
-    private void ResolveCollision(Contact contact)
-    {
-        _collisionResolution.ResolveCollision(contact);
+        if (CollidingBodyPairChache.Contains(pair) || CollidingBodyPairChache.Contains(reversPair))
+            return true;
+
+        CollidingBodyPairChache.Add(pair);
+        return false;
     }
 
     private static void CorrectCollisionContactPositions(Contact contact)
     {
-        const float depthCorrectPercent = 0.45f;
+        const float allowanceDepth = 0.05f;
+        const float correctDepthPercent = 0.4f;
 
         var first = contact.First;
         var second = contact.Second;
         var manifold = contact.Manifold;
 
-        var correction = manifold.Depth / (first.InverseMass + second.InverseMass) * manifold.Normal * depthCorrectPercent;
+        var depth = Math2D.Max(manifold.Depth - allowanceDepth, 0);
+        var correction = depth / (first.InverseMass + second.InverseMass) * manifold.Normal * correctDepthPercent;
 
-        first.CorrectContactPosition(correction);
-        second.CorrectContactPosition(-correction);
+        first.CorrectContactPosition(-correction);
+        second.CorrectContactPosition(correction);
     }
 }
