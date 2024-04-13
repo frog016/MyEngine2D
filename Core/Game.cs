@@ -39,8 +39,6 @@ public sealed class Game : IDisposable
     public void Dispose()   //  TODO: Добавить вызов Dispose
     {
         _stopLoopSource.Cancel();
-
-        _graphicRender.Dispose();
         ServiceLocator.Instance.Dispose();
     }
 

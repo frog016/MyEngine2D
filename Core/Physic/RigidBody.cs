@@ -1,6 +1,5 @@
 ﻿using MyEngine2D.Core.Entity;
 using MyEngine2D.Core.Structure;
-using System.Collections.Generic;
 
 namespace MyEngine2D.Core.Physic;
 

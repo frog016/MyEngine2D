@@ -63,7 +63,7 @@ internal sealed class GraphicRender : IDisposable
         }
     }
 
-    internal void DrawDebugPoint(Structure.Vector2 point, float radius = DebugPointSize)
+    internal void DrawDebugPoint(Structure.Vector2 point, float radius = DebugPointSize)    //  TODO: Улучшить сисетму Debug отрисовки.
     {
         _renderTarget.BeginDraw();
         _renderTarget.DrawEllipse(new Ellipse(point.ToRawVector2(), radius, radius), _debugBrush);
