@@ -1,6 +1,5 @@
 ﻿using MyEngine2D.Core.Math;
 using MyEngine2D.Core.Structure;
-using System.Collections.Generic;
 
 namespace MyEngine2D.Core.Physic;
 
@@ -41,7 +40,7 @@ public sealed class ImpulseCollisionResolutionMethod : ICollisionResolutionMetho
         int contactCount)
     {
         var elasticity = Math2D.Min(first.Material.Elasticity, second.Material.Elasticity);
-        
+
         var impulseScalar = PhysicMath2D.ComputeCollisionImpulse(
             relativeVelocity, contactNormal, elasticity,
             firstImpulseArgs, secondImpulseArgs);
@@ -85,7 +84,7 @@ public sealed class ImpulseCollisionResolutionMethod : ICollisionResolutionMetho
         RigidBody first, Vector2 firstContactVector,
         RigidBody second, Vector2 secondContactVector)
     {
-        return second.LinearVelocity + Vector2.CrossProduct(second.AngularVelocity, secondContactVector) - 
+        return second.LinearVelocity + Vector2.CrossProduct(second.AngularVelocity, secondContactVector) -
             first.LinearVelocity - Vector2.CrossProduct(first.AngularVelocity, firstContactVector);
     }
 }

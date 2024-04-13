@@ -34,8 +34,8 @@ public readonly struct OrientedRectangle
         {
             new Vector2(-1, -1),
             new Vector2(-1, 1),
-            new Vector2(1, -1),
             new Vector2(1, 1),
+            new Vector2(1, -1),
         };
 
         return cornerDirections
@@ -43,5 +43,22 @@ public readonly struct OrientedRectangle
             .Select(scaledDirection => scaledDirection.Rotate(rotation))
             .Select(localVertex => center + localVertex)
             .ToArray();
+    }
+
+    public (Vector2 left, Vector2 right) GetCornerVertexNeighbors(Vector2 vertex)
+    {
+        var cornerVertices = GetCornerVertices();
+        var index = Array.IndexOf(cornerVertices, vertex);
+
+        if (index == -1)
+        {
+            throw new ArgumentException($"Point: {vertex} isn't vertex of rectangle.");
+        }
+
+        var length = cornerVertices.Length;
+        var left = cornerVertices[(length + index - 1) % length];
+        var right = cornerVertices[(index + 1) % length];
+
+        return (left, right);
     }
 }

@@ -6,7 +6,6 @@ using SharpDX.Direct2D1;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using SharpDX.Windows;
-using System.Drawing;
 
 using DX2D1 = SharpDX.Direct2D1;
 
@@ -19,10 +18,15 @@ internal sealed class GraphicRender : IDisposable
     private readonly RenderLoop _renderLoop;
     private readonly RenderTarget _renderTarget;
     private readonly DX2D1.Factory _factory;
-    private readonly Brush _brush;
+    private readonly DX2D1.Brush _brush;
+
+    private readonly DX2D1.Brush _debugBrush;
 
     private static readonly SharpDX.Color DefaultBackgroundColor = new(32, 103, 176);
     private static readonly SharpDX.Color DefaultShapeColor = new(30, 30, 30);
+    private static readonly SharpDX.Color DefaultDebugColor = new(255, 0, 0);
+
+    private const float DebugPointSize = 4f;
 
     internal GraphicRender(GameLevelManager levelManager, GraphicWindowDescription description)
     {
@@ -38,6 +42,7 @@ internal sealed class GraphicRender : IDisposable
 
         _renderTarget = InitializeRenderingDevice();
         _brush = new SolidColorBrush(_renderTarget, DefaultShapeColor);
+        _debugBrush = new SolidColorBrush(_renderTarget, DefaultDebugColor);
     }
 
     internal void Run()
@@ -58,6 +63,20 @@ internal sealed class GraphicRender : IDisposable
         }
     }
 
+    internal void DrawDebugPoint(Structure.Vector2 point, float radius = DebugPointSize)
+    {
+        _renderTarget.BeginDraw();
+        _renderTarget.DrawEllipse(new Ellipse(point.ToRawVector2(), radius, radius), _debugBrush);
+        _renderTarget.EndDraw();
+    }
+
+    internal void DrawDebugLine(Structure.Vector2 start, Structure.Vector2 end, float width = DebugPointSize)
+    {
+        _renderTarget.BeginDraw();
+        _renderTarget.DrawLine(start.ToRawVector2(), end.ToRawVector2(), _debugBrush, width);
+        _renderTarget.EndDraw();
+    }
+
     public void Dispose()
     {
         _window.Dispose();
@@ -65,6 +84,7 @@ internal sealed class GraphicRender : IDisposable
         _renderTarget.Dispose();
         _factory.Dispose();
         _brush.Dispose();
+        _debugBrush.Dispose();
     }
 
     private RenderTarget InitializeRenderingDevice()

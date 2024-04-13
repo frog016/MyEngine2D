@@ -135,7 +135,7 @@ public sealed class PhysicWorld
     private static void CorrectCollisionContactPositions(Contact contact)
     {
         const float allowanceDepth = 0.05f;
-        const float correctDepthPercent = 0.4f;
+        const float correctDepthPercent = 0.5f;
 
         var first = contact.First;
         var second = contact.Second;

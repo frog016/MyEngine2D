@@ -60,7 +60,7 @@ public sealed class GameBuilder
 
         var game = new Game(time, levelManager, inputSystem, physicWorld, graphicRender);
 
-        RegisterGameServices(time, levelManager, inputSystem, game, resourceManager);
+        RegisterGameServices(time, levelManager, inputSystem, game, resourceManager, graphicRender);
         Clear();
 
         return game;
@@ -94,13 +94,14 @@ public sealed class GameBuilder
     }
 
     private static void RegisterGameServices(Time time, GameLevelManager levelManager, InputSystem inputSystem,
-        Game game, ResourceManager resourceManager)
+        Game game, ResourceManager resourceManager, GraphicRender graphicRender)
     {
         ServiceLocator.Instance.RegisterInstance(time);
         ServiceLocator.Instance.RegisterInstance(levelManager);
         ServiceLocator.Instance.RegisterInstance(inputSystem);
         ServiceLocator.Instance.RegisterInstance(game);
         ServiceLocator.Instance.RegisterInstance(resourceManager);
+        ServiceLocator.Instance.RegisterInstance(graphicRender);
     }
 
     private void Clear()
