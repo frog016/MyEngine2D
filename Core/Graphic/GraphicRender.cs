@@ -6,7 +6,6 @@ using SharpDX.Direct2D1;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using SharpDX.Windows;
-
 using DX2D1 = SharpDX.Direct2D1;
 
 namespace MyEngine2D.Core.Graphic;
@@ -48,6 +47,14 @@ internal sealed class GraphicRender : IDisposable
     internal void Run()
     {
         _window.Show();
+
+        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        {
+            if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+            {
+                spriteRenderer.InitializeRender(_renderTarget);
+            }
+        }
     }
 
     internal void Render()  //  TODO: Добавить буффер для отрисовки кадров (SwapChain). Понять, как он работает для 2д.
@@ -57,7 +64,8 @@ internal sealed class GraphicRender : IDisposable
             _renderTarget.BeginDraw();
             _renderTarget.Clear(DefaultBackgroundColor);
 
-            TestDrawGameObjects();
+            //TestDrawGameObjects();
+            RenderGameObjects();
 
             _renderTarget.EndDraw();
         }
@@ -104,6 +112,17 @@ internal sealed class GraphicRender : IDisposable
             Matrix3x2.Translation(0, _window.Height);
 
         return renderTarget;
+    }
+
+    private void RenderGameObjects()
+    {
+        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        {
+            if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
+            {
+                spriteRenderer.Render(_renderTarget);
+            }
+        }
     }
 
     [Obsolete("Test realization for physic. Replace this after testing.")]  //  TODO:
