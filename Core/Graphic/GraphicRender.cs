@@ -1,25 +1,26 @@
-﻿using MyEngine2D.Core.Level;
-using MyEngine2D.Core.Physic;
+﻿using MyEngine2D.Core.Entity;
+using MyEngine2D.Core.Level;
 using MyEngine2D.Core.Utility;
 using SharpDX;
-using SharpDX.Direct2D1;
 using SharpDX.DXGI;
-using SharpDX.Mathematics.Interop;
 using SharpDX.Windows;
+
 using DX2D1 = SharpDX.Direct2D1;
 
 namespace MyEngine2D.Core.Graphic;
 
-internal sealed class GraphicRender : IDisposable
+public sealed class GraphicRender : IDisposable
 {
+    internal readonly DX2D1.RenderTarget RenderTarget;
+
     private readonly GameLevelManager _levelManager;
     private readonly RenderForm _window;
     private readonly RenderLoop _renderLoop;
-    private readonly RenderTarget _renderTarget;
     private readonly DX2D1.Factory _factory;
     private readonly DX2D1.Brush _brush;
-
     private readonly DX2D1.Brush _debugBrush;
+
+    private RenderLayer _renderLayer;
 
     private static readonly SharpDX.Color DefaultBackgroundColor = new(32, 103, 176);
     private static readonly SharpDX.Color DefaultShapeColor = new(30, 30, 30);
@@ -39,74 +40,74 @@ internal sealed class GraphicRender : IDisposable
         _renderLoop = new RenderLoop(_window);
         _factory = new DX2D1.Factory();
 
-        _renderTarget = InitializeRenderingDevice();
-        _brush = new SolidColorBrush(_renderTarget, DefaultShapeColor);
-        _debugBrush = new SolidColorBrush(_renderTarget, DefaultDebugColor);
+        RenderTarget = InitializeRenderingDevice();
+        _brush = new DX2D1.SolidColorBrush(RenderTarget, DefaultShapeColor);
+        _debugBrush = new DX2D1.SolidColorBrush(RenderTarget, DefaultDebugColor);
     }
 
     internal void Run()
     {
-        _window.Show();
+        _renderLayer = new RenderLayer(_levelManager.CurrentLevel.GameObjects);
 
-        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
-        {
-            if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
-            {
-                spriteRenderer.InitializeRender(_renderTarget);
-            }
-        }
+        _levelManager.CurrentLevel.GameObjects.Added += OnObjectAdded;
+        _levelManager.CurrentLevel.GameObjects.Removed += OnObjectRemoved;
+
+        _window.Show();
     }
 
     internal void Render()  //  TODO: Добавить буффер для отрисовки кадров (SwapChain). Понять, как он работает для 2д.
     {
         if (_renderLoop.NextFrame())
         {
-            _renderTarget.BeginDraw();
-            _renderTarget.Clear(DefaultBackgroundColor);
+            RenderTarget.BeginDraw();
+            RenderTarget.Clear(DefaultBackgroundColor);
 
-            //TestDrawGameObjects();
             RenderGameObjects();
 
-            _renderTarget.EndDraw();
+            RenderTarget.EndDraw();
         }
     }
 
-    internal void DrawDebugPoint(Structure.Vector2 point, float radius = DebugPointSize)    //  TODO: Улучшить сисетму Debug отрисовки.
+    public void DrawDebugPoint(Structure.Vector2 point, float radius = DebugPointSize)    //  TODO: Улучшить сисетму Debug отрисовки.
     {
-        _renderTarget.BeginDraw();
-        _renderTarget.DrawEllipse(new Ellipse(point.ToRawVector2(), radius, radius), _debugBrush);
-        _renderTarget.EndDraw();
+        RenderTarget.BeginDraw();
+        RenderTarget.DrawEllipse(new DX2D1.Ellipse(point.ToRawVector2(), radius, radius), _debugBrush);
+        RenderTarget.EndDraw();
     }
 
-    internal void DrawDebugLine(Structure.Vector2 start, Structure.Vector2 end, float width = DebugPointSize)
+    public void DrawDebugLine(Structure.Vector2 start, Structure.Vector2 end, float width = DebugPointSize)
     {
-        _renderTarget.BeginDraw();
-        _renderTarget.DrawLine(start.ToRawVector2(), end.ToRawVector2(), _debugBrush, width);
-        _renderTarget.EndDraw();
+        RenderTarget.BeginDraw();
+        RenderTarget.DrawLine(start.ToRawVector2(), end.ToRawVector2(), _debugBrush, width);
+        RenderTarget.EndDraw();
     }
 
     public void Dispose()
     {
+        _levelManager.CurrentLevel.GameObjects.Added -= OnObjectAdded;
+        _levelManager.CurrentLevel.GameObjects.Removed -= OnObjectRemoved;
+
+        RenderTarget.Dispose();
+        _renderLayer.Dispose();
         _window.Dispose();
         _renderLoop.Dispose();
-        _renderTarget.Dispose();
         _factory.Dispose();
         _brush.Dispose();
         _debugBrush.Dispose();
     }
 
-    private RenderTarget InitializeRenderingDevice()
+    private DX2D1.RenderTarget InitializeRenderingDevice()
     {
-        var renderTargetProperties = new RenderTargetProperties(
-            new PixelFormat(Format.R8G8B8A8_UNorm, DX2D1.AlphaMode.Premultiplied));
+        var renderTargetProperties = new DX2D1.RenderTargetProperties(
+            new DX2D1.PixelFormat(Format.R8G8B8A8_UNorm, DX2D1.AlphaMode.Premultiplied));
 
-        var hwndRenderTargetProperties = new HwndRenderTargetProperties()
+        var hwndRenderTargetProperties = new DX2D1.HwndRenderTargetProperties()
         {
             Hwnd = _window.Handle,
             PixelSize = new Size2(_window.Width, _window.Height),
         };
 
-        var renderTarget = new WindowRenderTarget(_factory, renderTargetProperties, hwndRenderTargetProperties);
+        var renderTarget = new DX2D1.WindowRenderTarget(_factory, renderTargetProperties, hwndRenderTargetProperties);
         renderTarget.Transform =
             Matrix3x2.Scaling(1, -1) *
             Matrix3x2.Translation(0, _window.Height);
@@ -116,59 +117,25 @@ internal sealed class GraphicRender : IDisposable
 
     private void RenderGameObjects()
     {
-        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        foreach (var spriteRenderer in _renderLayer)
         {
-            if (gameObject.TryGetComponent<SpriteRenderer>(out var spriteRenderer))
-            {
-                spriteRenderer.Render(_renderTarget);
-            }
+            spriteRenderer.Render(RenderTarget);
         }
     }
 
-    [Obsolete("Test realization for physic. Replace this after testing.")]  //  TODO:
-    private void TestDrawGameObjects()
+    private void OnObjectAdded(GameObject gameObject)
     {
-        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        if (gameObject.TryGetComponent<SpriteRenderer>(out var renderer))
         {
-            if (gameObject.TryGetComponent<RigidBody>(out var body))
-            {
-                switch (body.Shape)
-                {
-                    case CirclePhysicShape circle:
-                        DrawCircle(circle);
-                        break;
-                    case RectanglePhysicShape rectangle:
-                        DrawRectangle(rectangle);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            _renderLayer.Add(renderer.Layer, renderer);
         }
     }
 
-    private void DrawCircle(CirclePhysicShape circleShape)
+    private void OnObjectRemoved(GameObject gameObject)
     {
-        var circle = new Ellipse(circleShape.Center.ToRawVector2(), circleShape.Radius, circleShape.Radius);
-        _renderTarget.FillEllipse(circle, _brush);
-    }
-
-    private void DrawRectangle(RectanglePhysicShape rectangleShape)
-    {
-        var center = rectangleShape.Center;
-        var rectHalfSize = rectangleShape.Size / 2f;
-
-        var rectangle = new RawRectangleF(
-            center.X - rectHalfSize.X,
-            center.Y + rectHalfSize.Y,
-            center.X + rectHalfSize.X,
-            center.Y - rectHalfSize.Y);
-
-        using var rectGeometry = new RectangleGeometry(_factory, rectangle);
-
-        var rotationMatrix = Matrix3x2.Rotation(rectangleShape.Rotation, center.ToDXVector2());
-        using var transformedRect = new TransformedGeometry(_factory, rectGeometry, rotationMatrix);
-
-        _renderTarget.FillGeometry(transformedRect, _brush);
+        if (gameObject.TryGetComponent<SpriteRenderer>(out var renderer))
+        {
+            _renderLayer.Remove(renderer.Layer, renderer);
+        }
     }
 }

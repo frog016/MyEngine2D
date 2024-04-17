@@ -6,9 +6,9 @@ namespace MyEngine2D.Core.Level;
 public sealed class GameLevel
 {
     public readonly string Name;
-    public IReadOnlyList<GameObject> GameObjects => _gameObjects;
+    public IReadOnlyObservable<GameObject> GameObjects => _gameObjects;
 
-    private readonly List<GameObject> _gameObjects = new();
+    private readonly ObservableCollection<GameObject> _gameObjects = new();
 
     public GameLevel(string name)
     {

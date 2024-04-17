@@ -3,7 +3,6 @@ using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
 using MyEngine2D.Core.Physic;
 using MyEngine2D.Core.Resource;
-using MyEngine2D.Core.Structure;
 using MyEngine2D.Core.Utility;
 
 namespace MyEngine2D.Core;
@@ -12,6 +11,7 @@ public sealed class GameBuilder
 {
     private readonly List<GameLevel> _levels = new();
     private readonly List<InputActionBase> _inputActions = new();
+    private readonly List<ResourceImporter> _resourceImporters = new();
 
     private static readonly Type[] LevelConfiguratorTypes;
 
@@ -48,6 +48,12 @@ public sealed class GameBuilder
         return this;
     }
 
+    public GameBuilder WithResourceImporters(params ResourceImporter[] resourceImporters)
+    {
+        _resourceImporters.AddRange(resourceImporters);
+        return this;
+    }
+
     public Game Build()
     {
         var resourceManager = CreateResourceManager();
@@ -66,15 +72,17 @@ public sealed class GameBuilder
         return game;
     }
 
-    private static GraphicRender CreateGraphicRender(GameLevelManager levelManager)
-    {
-        var description = new GraphicWindowDescription(1920, 1080);
-        return new GraphicRender(levelManager, description);
-    }
-
-    private static ResourceManager CreateResourceManager()
+    private ResourceManager CreateResourceManager()
     {
         var resourceManager = new ResourceManager();
+        var importers = GetDefaultRecourseImporters()
+            .Concat(_resourceImporters);
+
+        foreach (var recourseImporter in importers)
+        {
+            resourceManager.BindImporter(recourseImporter);
+        }
+
         return resourceManager;
     }
 
@@ -93,6 +101,23 @@ public sealed class GameBuilder
         return inputSystem;
     }
 
+    private void Clear()
+    {
+        _levels.Clear();
+        _inputActions.Clear();
+    }
+
+    private static IEnumerable<ResourceImporter> GetDefaultRecourseImporters()
+    {
+        yield return new SpriteResourceImporter();
+    }
+
+    private static GraphicRender CreateGraphicRender(GameLevelManager levelManager)
+    {
+        var description = new GraphicWindowDescription(1920, 1080);
+        return new GraphicRender(levelManager, description);
+    }
+
     private static void RegisterGameServices(Time time, GameLevelManager levelManager, InputSystem inputSystem,
         Game game, ResourceManager resourceManager, GraphicRender graphicRender)
     {
@@ -102,11 +127,5 @@ public sealed class GameBuilder
         ServiceLocator.Instance.RegisterInstance(game);
         ServiceLocator.Instance.RegisterInstance(resourceManager);
         ServiceLocator.Instance.RegisterInstance(graphicRender);
-    }
-
-    private void Clear()
-    {
-        _levels.Clear();
-        _inputActions.Clear();
     }
 }

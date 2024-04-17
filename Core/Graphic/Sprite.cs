@@ -8,31 +8,34 @@ namespace MyEngine2D.Core.Graphic;
 
 public sealed class Sprite : IDisposable
 {
-    public Structure.Vector2 Size => new(Bitmap.Size.Width, Bitmap.Size.Height);
+    public int PixelsPerUnit { get; private set; }
+    public Structure.Vector2 Size { get; private set; }
 
-    internal SharpDX.Direct2D1.Bitmap Bitmap;
+    internal SharpDX.Direct2D1.Bitmap DirectBitmap;
 
-    private readonly string _pathToFile;
+    private readonly Bitmap _bitmap;
 
-    public Sprite(string file)  //  TODO: сделать конструктор internal и создатвать их в spriteRenderer.
+    internal Sprite(Bitmap bitmap)
     {
-        _pathToFile = file;
+        _bitmap = bitmap;
+    }
+
+    internal void InitializeInternal(SharpDX.Direct2D1.RenderTarget renderTarget, int pixelsPerUnit)
+    {
+        PixelsPerUnit = pixelsPerUnit;
+        Size = new Structure.Vector2(_bitmap.Width, _bitmap.Height) / PixelsPerUnit;
+
+        DirectBitmap = CreateBitmap(renderTarget, _bitmap);
     }
 
     public void Dispose()
     {
-        Bitmap.Dispose();
+        DirectBitmap.Dispose();
+        _bitmap.Dispose();
     }
 
-    internal void InitializeSprite(SharpDX.Direct2D1.RenderTarget renderTarget)
+    private static SharpDX.Direct2D1.Bitmap CreateBitmap(SharpDX.Direct2D1.RenderTarget renderTarget, Bitmap bitmap)
     {
-        Bitmap = CreateBitmap(renderTarget, _pathToFile);
-    }
-
-    private static SharpDX.Direct2D1.Bitmap CreateBitmap(SharpDX.Direct2D1.RenderTarget renderTarget, string file)
-    {
-        using var bitmap = (Bitmap)Image.FromFile(file);    //  TODO: Поменять загрузку изображения на загрузку через ResourceManager.
-
         var bitmapRectangle = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
         var bitmapProperties = new SharpDX.Direct2D1.BitmapProperties(renderTarget.PixelFormat);
         var bitmapSize = new Size2(bitmap.Width, bitmap.Height);
