@@ -25,7 +25,6 @@ namespace MyEngine2D.Core.Entity
             _components.Add(Transform);
         }
 
-
         public void Start()
         {
             foreach (var component in _components)

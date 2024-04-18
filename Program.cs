@@ -5,7 +5,7 @@
         [STAThread]
         public static void Main()
         {
-            var overview = new GraphicOverviewPreset();
+            var overview = new PhysicOverviewPreset();
             overview.Start();
         }
     }

@@ -60,7 +60,7 @@ public sealed class Game : IDisposable
             _time.Tick();
 
             HandleInput();
-            Update(_time.DeltaTime);
+            Update();
             FixedUpdate();
             Render();
         }
@@ -71,11 +71,13 @@ public sealed class Game : IDisposable
         _inputSystem.UpdateInput();
     }
 
-    private void Update(double deltaTime)
+    private void Update()
     {
+        var deltaTime = _time.DeltaTime;
+
         foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
         {
-            gameObject.UpdateObject((float)deltaTime);
+            gameObject.UpdateObject(deltaTime);
         }
     }
 

@@ -7,7 +7,7 @@ public sealed class PhysicWorld
 {
     private readonly GameLevelManager _levelManager;
 
-    private static readonly HashSet<(RigidBody, RigidBody)> CollidingBodyPairChache = new();
+    private static readonly HashSet<(RigidBody, RigidBody)> CollidingBodyPairCache = new();
 
     private ICollisionResolutionMethod _collisionResolution = new ImpulseCollisionResolutionMethod();
 
@@ -100,7 +100,7 @@ public sealed class PhysicWorld
     //  Narrow phase
     private static IEnumerable<Contact> GetObjectCollisionContacts(IEnumerable<(RigidBody first, RigidBody second)> pairs)
     {
-        CollidingBodyPairChache.Clear();
+        CollidingBodyPairCache.Clear();
 
         foreach (var (first, second) in pairs)
         {
@@ -125,10 +125,10 @@ public sealed class PhysicWorld
         var pair = (first, second);
         var reversPair = (second, first);
 
-        if (CollidingBodyPairChache.Contains(pair) || CollidingBodyPairChache.Contains(reversPair))
+        if (CollidingBodyPairCache.Contains(pair) || CollidingBodyPairCache.Contains(reversPair))
             return true;
 
-        CollidingBodyPairChache.Add(pair);
+        CollidingBodyPairCache.Add(pair);
         return false;
     }
 
