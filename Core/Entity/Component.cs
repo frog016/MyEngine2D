@@ -3,6 +3,7 @@
 public abstract class Component
 {
     public GameObject GameObject { get; private set; }
+    public Transform Transform => GameObject.Transform;
 
     protected Component(GameObject gameObject)
     {

@@ -41,7 +41,7 @@ public sealed class SpriteRenderer : Component
     public event Action<SpriteRenderer, Layer, Layer> LayerChanged = delegate { }; 
 
     private readonly ResourceManager _resourceManager;
-    private readonly DX2D1.RenderTarget _renderTarget;
+    private readonly GraphicRender _graphicRender;
 
     private Layer _layer;
     private float _opacity;
@@ -49,7 +49,7 @@ public sealed class SpriteRenderer : Component
     public SpriteRenderer(GameObject gameObject, ResourceManager resourceManager, GraphicRender graphicRender) : base(gameObject)
     {
         _resourceManager = resourceManager;
-        _renderTarget = graphicRender.RenderTarget;
+        _graphicRender = graphicRender;
 
         Scale = Vector2.One;
         Offset = Vector2.Zero;
@@ -88,16 +88,16 @@ public sealed class SpriteRenderer : Component
         }
 
         var destinationRectangle = GetRenderTargetRectangle();
+        var renderTransformMatrix = renderTarget.Transform;
 
-        var transformationMatrix = renderTarget.Transform;
-        renderTarget.Transform = Matrix3x2.Rotation(GameObject.Transform.Rotation, GameObject.Transform.Position.ToDXVector2());
+        renderTarget.Transform = Matrix3x2.Rotation(Transform.Rotation, Transform.Position.ToDXVector2()) * renderTransformMatrix;
         renderTarget.DrawBitmap(Sprite.DirectBitmap, destinationRectangle, Opacity, DX2D1.BitmapInterpolationMode.Linear);
-        renderTarget.Transform = transformationMatrix;
+        renderTarget.Transform = renderTransformMatrix;
     }
 
     private RawRectangleF GetRenderTargetRectangle()
     {
-        var center = GameObject.Transform.Position + Offset;
+        var center = Transform.Position + Offset;
         var halfSize = ScaledSpriteSize / 2f;
 
         var leftBottom = center - halfSize;
@@ -109,7 +109,7 @@ public sealed class SpriteRenderer : Component
     private Sprite LoadSpriteFrom(SpriteLoadData spriteData)
     {
         var sprite = _resourceManager.LoadResource<Sprite>(spriteData.FileRelativePath);
-        sprite.InitializeInternal(_renderTarget, spriteData.PixelsPerUnit);
+        sprite.InitializeInternal(_graphicRender.RenderTarget, spriteData.PixelsPerUnit);
 
         return sprite;
     }

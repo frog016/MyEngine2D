@@ -11,6 +11,8 @@ namespace MyEngine2D.Core.Graphic;
 
 public sealed class GraphicRender : IDisposable
 {
+    public Structure.Vector2 ScreenSize => RenderTarget.Size.ToVector2();
+
     internal readonly DX2D1.RenderTarget RenderTarget;
 
     private readonly GameLevelManager _levelManager;
@@ -21,8 +23,9 @@ public sealed class GraphicRender : IDisposable
     private readonly DX2D1.Brush _debugBrush;
 
     private RenderLayer _renderLayer;
+    public Camera _renderCamera;
 
-    private static readonly SharpDX.Color DefaultBackgroundColor = new(32, 103, 176);
+    private static readonly SharpDX.Color DefaultBackgroundColor = new(0, 0, 0); //new(32, 103, 176);
     private static readonly SharpDX.Color DefaultShapeColor = new(30, 30, 30);
     private static readonly SharpDX.Color DefaultDebugColor = new(255, 0, 0);
 
@@ -48,6 +51,7 @@ public sealed class GraphicRender : IDisposable
     internal void Run()
     {
         _renderLayer = new RenderLayer(_levelManager.CurrentLevel.GameObjects);
+        _renderCamera = _levelManager.CurrentLevel.GameObjects.FindByType<Camera>();
 
         _levelManager.CurrentLevel.GameObjects.Added += OnObjectAdded;
         _levelManager.CurrentLevel.GameObjects.Removed += OnObjectRemoved;
@@ -62,7 +66,11 @@ public sealed class GraphicRender : IDisposable
             RenderTarget.BeginDraw();
             RenderTarget.Clear(DefaultBackgroundColor);
 
-            RenderGameObjects();
+            RenderTarget.Transform = _renderCamera.GetViewMatrix() * GetRenderTransformMatrix();
+            foreach (var spriteRenderer in _renderLayer)
+            {
+                spriteRenderer.Render(RenderTarget);
+            }
 
             RenderTarget.EndDraw();
         }
@@ -75,11 +83,21 @@ public sealed class GraphicRender : IDisposable
         RenderTarget.EndDraw();
     }
 
+    public void DrawDebugPointInProcess(Structure.Vector2 point, float radius = DebugPointSize)
+    {
+        RenderTarget.DrawEllipse(new DX2D1.Ellipse(point.ToRawVector2(), radius, radius), _debugBrush);
+    }
+
     public void DrawDebugLine(Structure.Vector2 start, Structure.Vector2 end, float width = DebugPointSize)
     {
         RenderTarget.BeginDraw();
         RenderTarget.DrawLine(start.ToRawVector2(), end.ToRawVector2(), _debugBrush, width);
         RenderTarget.EndDraw();
+    }
+
+    public void DrawDebugLineInProcess(Structure.Vector2 start, Structure.Vector2 end, float width = DebugPointSize)
+    {
+        RenderTarget.DrawLine(start.ToRawVector2(), end.ToRawVector2(), _debugBrush, width);
     }
 
     public void Dispose()
@@ -101,26 +119,17 @@ public sealed class GraphicRender : IDisposable
         var renderTargetProperties = new DX2D1.RenderTargetProperties(
             new DX2D1.PixelFormat(Format.R8G8B8A8_UNorm, DX2D1.AlphaMode.Premultiplied));
 
-        var hwndRenderTargetProperties = new DX2D1.HwndRenderTargetProperties()
+        var hwndRenderTargetProperties = new DX2D1.HwndRenderTargetProperties
         {
             Hwnd = _window.Handle,
             PixelSize = new Size2(_window.Width, _window.Height),
+            PresentOptions = DX2D1.PresentOptions.RetainContents
         };
 
         var renderTarget = new DX2D1.WindowRenderTarget(_factory, renderTargetProperties, hwndRenderTargetProperties);
-        renderTarget.Transform =
-            Matrix3x2.Scaling(1, -1) *
-            Matrix3x2.Translation(0, _window.Height);
+        renderTarget.Transform = GetRenderTransformMatrix();
 
         return renderTarget;
-    }
-
-    private void RenderGameObjects()
-    {
-        foreach (var spriteRenderer in _renderLayer)
-        {
-            spriteRenderer.Render(RenderTarget);
-        }
     }
 
     private void OnObjectAdded(GameObject gameObject)
@@ -137,5 +146,10 @@ public sealed class GraphicRender : IDisposable
         {
             _renderLayer.Remove(renderer.Layer, renderer);
         }
+    }
+
+    private Matrix3x2 GetRenderTransformMatrix()
+    {
+        return Matrix3x2.Scaling(1, -1) * Matrix3x2.Translation(0, _window.Height);
     }
 }

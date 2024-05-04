@@ -5,6 +5,21 @@ namespace MyEngine2D.Core.Utility;
 
 internal static class Vector2Extensions
 {
+    internal static System.Numerics.Vector2 ToNumericVector2(this Vector2 vector)
+    {
+        return new System.Numerics.Vector2(vector.X, vector.Y);
+    }
+
+    internal static System.Numerics.Vector3 ToNumericVector3(this Vector2 vector)
+    {
+        return new System.Numerics.Vector3(vector.X, vector.Y, 0);
+    }
+
+    internal static Vector2 ToVector2(this SharpDX.Size2F size)
+    {
+        return new Vector2(size.Width, size.Height);
+    }
+
     internal static RawVector2 ToRawVector2(this Vector2 vector)
     {
         return new RawVector2(vector.X, vector.Y);

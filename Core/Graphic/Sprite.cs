@@ -10,6 +10,7 @@ public sealed class Sprite : IDisposable
 {
     public int PixelsPerUnit { get; private set; }
     public Structure.Vector2 Size { get; private set; }
+    public Structure.Vector2 TextureSize { get; private set; }
 
     internal SharpDX.Direct2D1.Bitmap DirectBitmap;
 
@@ -24,6 +25,7 @@ public sealed class Sprite : IDisposable
     {
         PixelsPerUnit = pixelsPerUnit;
         Size = new Structure.Vector2(_bitmap.Width, _bitmap.Height) / PixelsPerUnit;
+        TextureSize = new Structure.Vector2(_bitmap.Width, _bitmap.Height);
 
         DirectBitmap = CreateBitmap(renderTarget, _bitmap);
     }
@@ -53,7 +55,7 @@ public sealed class Sprite : IDisposable
     {
         var bitmapData = bitmap.LockBits(sourceArea, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
 
-        for (var y = 0; y < bitmap.Height; y++)
+        for (var y = bitmap.Height - 1; y > 0; y--)
         {
             var offset = bitmapData.Stride * y;
             for (var x = 0; x < bitmap.Width; x++)

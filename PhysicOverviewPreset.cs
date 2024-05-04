@@ -35,8 +35,8 @@ public class PhysicOverviewPreset : OverviewPreset
         rotation = Math2D.ToRadians(10);
         CreateGroundRectangle(groundPosition, rotation, 1, testLevel);
 
-        var startPosition = new Vector2(100, sizeY / 3f);
-        var endPosition = new Vector2(sizeX - 100, sizeY / 3f);
+        var startPosition = new Vector2(100, sizeY / 2.5f);
+        var endPosition = new Vector2(sizeX - 100, sizeY / 2.5f);
         for (var index = 0; index < 20;)
         {
             var currentPosition = ToRight(index);
