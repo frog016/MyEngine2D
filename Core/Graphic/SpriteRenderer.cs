@@ -11,7 +11,7 @@ using Vector2 = MyEngine2D.Core.Structure.Vector2;
 
 namespace MyEngine2D.Core.Graphic;
 
-public sealed class SpriteRenderer : Component
+public sealed class SpriteRenderer : SpriteComponent
 {
     public Sprite? Sprite { get; private set; }
     public Vector2 Scale { get; set; }
@@ -40,17 +40,12 @@ public sealed class SpriteRenderer : Component
 
     public event Action<SpriteRenderer, Layer, Layer> LayerChanged = delegate { }; 
 
-    private readonly ResourceManager _resourceManager;
-    private readonly GraphicRender _graphicRender;
-
     private Layer _layer;
     private float _opacity;
 
-    public SpriteRenderer(GameObject gameObject, ResourceManager resourceManager, GraphicRender graphicRender) : base(gameObject)
+    public SpriteRenderer(GameObject gameObject, ResourceManager resourceManager, GraphicRender graphicRender) 
+        : base(gameObject, resourceManager, graphicRender)
     {
-        _resourceManager = resourceManager;
-        _graphicRender = graphicRender;
-
         Scale = Vector2.One;
         Offset = Vector2.Zero;
         Layer = 0;
@@ -72,6 +67,11 @@ public sealed class SpriteRenderer : Component
         var sprite = LoadSpriteFrom(spriteData);
 
         Sprite?.Dispose();
+        Sprite = sprite;
+    }
+
+    public void SetSprite(Sprite sprite)
+    {
         Sprite = sprite;
     }
 
@@ -112,13 +112,5 @@ public sealed class SpriteRenderer : Component
         var rightTop = center + halfSize;
 
         return new RawRectangleF(leftBottom.X, rightTop.Y, rightTop.X, leftBottom.Y);
-    }
-
-    private Sprite LoadSpriteFrom(SpriteLoadData spriteData)
-    {
-        var sprite = _resourceManager.LoadResource<Sprite>(spriteData.FileRelativePath);
-        sprite.InitializeInternal(_graphicRender.RenderTarget, spriteData.PixelsPerUnit);
-
-        return sprite;
     }
 }

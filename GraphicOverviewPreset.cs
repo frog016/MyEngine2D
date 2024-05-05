@@ -31,12 +31,33 @@ public class GraphicOverviewPreset : OverviewPreset
         camera.GameObject.AddComponent<CameraMovement>();
 
         var position = Vector2.Zero;
+        CreateHero(testLevel, position);
+
         CreateObject(testLevel, position - new Vector2(ScreenX / 4f, 0), Math2D.PI / 3);
         CreateObject(testLevel, position + new Vector2(ScreenX / 4f, 0), 2.15f);
 
         CreateBackground(testLevel, position);
 
         return game;
+    }
+
+    private static void CreateHero(GameLevel level, Vector2 position)
+    {
+        var testObject = level.Instantiate("Hero", position);
+
+        var spriteRender = testObject.AddComponent<SpriteRenderer>();
+        var spriteData = new SpriteLoadData("HeroKnight_Idle_0.png");
+        spriteRender.Initialize(
+            spriteData, 
+            scale: Vector2.One * SpriteLoadData.DefaultPixelsPerUnit, 
+            layer: 1,
+            opacity: 1);
+
+        var spriteAnimator = testObject.AddComponent<SpriteAnimator>();
+        var animationsData = CreateHeroAnimationsData();
+        spriteAnimator.Initialize(animationsData);
+
+        testObject.AddComponent<HeroController>();
     }
 
     private static void CreateObject(GameLevel level, Vector2 position, float rotation)
@@ -63,6 +84,32 @@ public class GraphicOverviewPreset : OverviewPreset
             spriteData,
             scale: 3 * Vector2.One * SpriteLoadData.DefaultPixelsPerUnit,
             layer: -1);
+    }
+
+    private static AnimationLoadData[] CreateHeroAnimationsData()
+    {
+        const int idleFramesCount = 8;
+        const float frameDuration = 0.25f;
+
+        var animationFrames = Enumerable
+            .Range(0, idleFramesCount)
+            .Select(index => new AnimationFrameLoadData(new SpriteLoadData($"HeroKnight_Idle_{index}.png"), frameDuration * index))
+            .ToArray();
+
+        var animationData = new AnimationLoadData("Idle", 1, true, animationFrames);
+        return new AnimationLoadData[] { animationData };
+    }
+}
+
+public class HeroController : Component
+{
+    public HeroController(GameObject gameObject) : base(gameObject)
+    {
+    }
+
+    public override void Start()
+    {
+        GameObject.GetComponent<SpriteAnimator>()?.PlayAnimation("Idle");
     }
 }
 
