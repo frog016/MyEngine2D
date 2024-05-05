@@ -23,9 +23,9 @@ public sealed class GraphicRender : IDisposable
     private readonly DX2D1.Brush _debugBrush;
 
     private RenderLayer _renderLayer;
-    public Camera _renderCamera;
+    private Camera _renderCamera;
 
-    private static readonly SharpDX.Color DefaultBackgroundColor = new(0, 0, 0); //new(32, 103, 176);
+    private static readonly SharpDX.Color DefaultBackgroundColor = new(0, 0, 0);
     private static readonly SharpDX.Color DefaultShapeColor = new(30, 30, 30);
     private static readonly SharpDX.Color DefaultDebugColor = new(255, 0, 0);
 
@@ -67,10 +67,7 @@ public sealed class GraphicRender : IDisposable
             RenderTarget.Clear(DefaultBackgroundColor);
 
             RenderTarget.Transform = _renderCamera.GetViewMatrix() * GetRenderTransformMatrix();
-            foreach (var spriteRenderer in _renderLayer)
-            {
-                spriteRenderer.Render(RenderTarget);
-            }
+            RenderVisibleObjects();
 
             RenderTarget.EndDraw();
         }
@@ -132,6 +129,33 @@ public sealed class GraphicRender : IDisposable
         return renderTarget;
     }
 
+    private void RenderVisibleObjects()
+    {
+        foreach (var visibleRenderer in GetVisibleObjectsInCameraView())
+        {
+            visibleRenderer.Render(RenderTarget);
+        }
+    }
+
+    private IEnumerable<SpriteRenderer> GetVisibleObjectsInCameraView()
+    {
+        var cameraView = _renderCamera.GetViewRectangle();
+
+        foreach (var renderer in _renderLayer)
+        {
+            var rendererBoundingBox = renderer.GetBoundingBox();
+            if (cameraView.Intersect(rendererBoundingBox))
+            {
+                yield return renderer;
+            }
+        }
+    }
+
+    private Matrix3x2 GetRenderTransformMatrix()
+    {
+        return Matrix3x2.Scaling(1, -1) * Matrix3x2.Translation(0, _window.Height);
+    }
+
     private void OnObjectAdded(GameObject gameObject)
     {
         if (gameObject.TryGetComponent<SpriteRenderer>(out var renderer))
@@ -146,10 +170,5 @@ public sealed class GraphicRender : IDisposable
         {
             _renderLayer.Remove(renderer.Layer, renderer);
         }
-    }
-
-    private Matrix3x2 GetRenderTransformMatrix()
-    {
-        return Matrix3x2.Scaling(1, -1) * Matrix3x2.Translation(0, _window.Height);
     }
 }

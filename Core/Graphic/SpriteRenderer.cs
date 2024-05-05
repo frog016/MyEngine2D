@@ -75,6 +75,14 @@ public sealed class SpriteRenderer : Component
         Sprite = sprite;
     }
 
+    public AxisAlignedBoundingBox GetBoundingBox()
+    {
+        var center = Transform.Position + Offset;
+        var halfSize = ScaledSpriteSize / 2f;
+
+        return new AxisAlignedBoundingBox(center - halfSize, center + halfSize);
+    }
+
     public override void OnDestroy()
     {
         Sprite?.Dispose();

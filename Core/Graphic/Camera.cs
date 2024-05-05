@@ -1,6 +1,7 @@
 ﻿using MyEngine2D.Core.Entity;
 using MyEngine2D.Core.Level;
 using MyEngine2D.Core.Math;
+using MyEngine2D.Core.Structure;
 using MyEngine2D.Core.Utility;
 using SharpDX;
 
@@ -32,6 +33,14 @@ public sealed class Camera : Component
         return Matrix3x2.Scaling(scaleFactor) *
                Matrix3x2.Rotation(Transform.Rotation) *
                Matrix3x2.Translation((screenSize / 2f - scaleFactor * Transform.Position).ToDXVector2());
+    }
+
+    public AxisAlignedBoundingBox GetViewRectangle()
+    {
+        var center = Transform.Position;
+        var halfSize = _graphicRender.ScreenSize.Normalize() * PixelsPerUnitOrthoSize * OrthoSize;
+
+        return new AxisAlignedBoundingBox(center - halfSize, center + halfSize);
     }
 
     public static Camera CreateDefault(GameLevel level)
