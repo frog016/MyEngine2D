@@ -1,5 +1,6 @@
 ﻿using MyEngine2D.Core.Entity;
 using MyEngine2D.Core.Math;
+using MyEngine2D.Core.Physic;
 using MyEngine2D.Core.Resource;
 using MyEngine2D.Core.Structure;
 using MyEngine2D.Core.Utility;
@@ -69,8 +70,6 @@ public sealed class SpriteRenderer : SpriteComponent
     public void SetSprite(SpriteLoadData spriteData)
     {
         var sprite = LoadSpriteFrom(spriteData);
-
-        Sprite?.Dispose();
         Sprite = sprite;
     }
 
@@ -87,11 +86,6 @@ public sealed class SpriteRenderer : SpriteComponent
         return new AxisAlignedBoundingBox(center - halfSize, center + halfSize);
     }
 
-    public override void OnDestroy()
-    {
-        Sprite?.Dispose();
-    }
-
     internal void Render(DX2D1.RenderTarget renderTarget)
     {
         if (Sprite == null)
@@ -105,12 +99,35 @@ public sealed class SpriteRenderer : SpriteComponent
         renderTarget.Transform = Matrix3x2.Rotation(Transform.Rotation, Transform.Position.ToDXVector2()) * renderTransformMatrix;
         renderTarget.DrawBitmap(Sprite.DirectBitmap, destinationRectangle, Opacity, DX2D1.BitmapInterpolationMode.Linear);
         renderTarget.Transform = renderTransformMatrix;
+
+        DrawDebugPhysicForm();
+    }
+
+    private void DrawDebugPhysicForm()
+    {
+        if (GameObject.TryGetComponent<RigidBody>(out var rigidBody) == false)
+        {
+            return;
+        }
+
+        switch (rigidBody.Shape)
+        {
+            case CirclePhysicShape circlePhysicShape:
+                GraphicRender.DrawDebugCircleInProcess(circlePhysicShape.Center, circlePhysicShape.Radius, 0.01f);
+                break;
+            case RectanglePhysicShape rectanglePhysicShape:
+                GraphicRender.DrawDebugRectangleInProcess(rectanglePhysicShape.GetBoundingBox(), 0.01f);
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     private RawRectangleF GetRenderTargetRectangle()
     {
         var center = Transform.Position + Offset;
-        var halfSize = ScaledTextureSize / 2f;
+        var halfSize = ScaledSpriteSize / 2f;
 
         var leftBottom = center - halfSize;
         var rightTop = center + halfSize;

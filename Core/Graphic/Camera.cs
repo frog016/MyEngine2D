@@ -28,7 +28,7 @@ public sealed class Camera : Component
     public Matrix3x2 GetViewMatrix()
     {
         var screenSize = _graphicRender.ScreenSize;
-        var scaleFactor = Math2D.Min(screenSize.X, screenSize.Y) / PixelsPerUnitOrthoSize / OrthoSize;
+        var scaleFactor = Math2D.Min(screenSize.X, screenSize.Y) / OrthoSize;
 
         return Matrix3x2.Scaling(scaleFactor) *
                Matrix3x2.Rotation(Transform.Rotation) *
@@ -38,7 +38,7 @@ public sealed class Camera : Component
     public AxisAlignedBoundingBox GetViewRectangle()
     {
         var center = Transform.Position;
-        var halfSize = _graphicRender.ScreenSize.Normalize() * PixelsPerUnitOrthoSize * OrthoSize;
+        var halfSize = _graphicRender.ScreenSize / PixelsPerUnitOrthoSize / 2;
 
         return new AxisAlignedBoundingBox(center - halfSize, center + halfSize);
     }

@@ -1,8 +1,10 @@
 ﻿using MyEngine2D.Core.Entity;
 using MyEngine2D.Core.Level;
+using MyEngine2D.Core.Structure;
 using MyEngine2D.Core.Utility;
 using SharpDX;
 using SharpDX.DXGI;
+using SharpDX.Mathematics.Interop;
 using SharpDX.Windows;
 
 using DX2D1 = SharpDX.Direct2D1;
@@ -30,7 +32,7 @@ public sealed class GraphicRender : IDisposable
     private static readonly SharpDX.Color DefaultShapeColor = new(30, 30, 30);
     private static readonly SharpDX.Color DefaultDebugColor = new(255, 0, 0);
 
-    private const float DebugPointSize = 4f;
+    private const float DebugPointSize = 0.25f;
 
     internal GraphicRender(Lazy<GameLevelManager> levelManager, GraphicWindowDescription description)
     {
@@ -108,6 +110,19 @@ public sealed class GraphicRender : IDisposable
     public void DrawDebugCircleInProcess(Structure.Vector2 center, float radius, float width = DebugPointSize)
     {
         RenderTarget.DrawEllipse(new DX2D1.Ellipse(center.ToDXVector2(), radius, radius), _debugBrush, width);
+    }
+
+    public void DrawDebugRectangle(AxisAlignedBoundingBox rectangle, float width = DebugPointSize)
+    {
+        RenderTarget.BeginDraw();
+        DrawDebugRectangleInProcess(rectangle, width);
+        RenderTarget.EndDraw();
+    }
+
+    public void DrawDebugRectangleInProcess(AxisAlignedBoundingBox rectangle, float width = DebugPointSize)
+    {
+        var rawRectangle = new RawRectangleF(rectangle.Min.X, rectangle.Max.Y, rectangle.Max.X, rectangle.Min.Y);
+        RenderTarget.DrawRectangle(rawRectangle, _debugBrush, width);
     }
 
     public void Dispose()

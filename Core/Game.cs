@@ -71,6 +71,8 @@ public sealed class Game : IDisposable
             Update();
             FixedUpdate();
             Render();
+
+            HandleDestroyRequest();
         }
     }
 
@@ -107,6 +109,18 @@ public sealed class Game : IDisposable
     private void Render()
     {
         _graphicRender.Render();
+    }
+
+    private void HandleDestroyRequest()
+    {
+        var gameObjects = _levelManager.CurrentLevel.GameObjects.ToArray();
+        foreach (var gameObject in gameObjects)
+        {
+            if (gameObject.DestroyRequest)
+            {
+                _levelManager.CurrentLevel.Destroy(gameObject);
+            }
+        }
     }
 
     private void StartGameObjectDelayed(GameObject gameObject)

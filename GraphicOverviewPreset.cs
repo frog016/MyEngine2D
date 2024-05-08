@@ -34,7 +34,7 @@ public class GraphicOverviewPreset : OverviewPreset
         CreateHero(testLevel, position);
 
         CreateObject(testLevel, position - new Vector2(ScreenX / 4f, 0), Math2D.PI / 3);
-        CreateObject(testLevel, position + new Vector2(ScreenX / 4f, 0), 2.15f);
+        CreateObject(testLevel, position + new Vector2(ScreenX / 4f, 0), 2.15f, true);
 
         CreateBackground(testLevel, position);
 
@@ -60,7 +60,7 @@ public class GraphicOverviewPreset : OverviewPreset
         testObject.AddComponent<HeroController>();
     }
 
-    private static void CreateObject(GameLevel level, Vector2 position, float rotation)
+    private static void CreateObject(GameLevel level, Vector2 position, float rotation, bool destroyable = false)
     {
         var testObject = level.Instantiate("Test Object", position, rotation);
         testObject.AddComponent<RotationComponent>().Initialize(Math2D.PI / 4f);
@@ -72,6 +72,11 @@ public class GraphicOverviewPreset : OverviewPreset
             spriteData,
             scale: Vector2.One * SpriteLoadData.DefaultPixelsPerUnit,
             opacity: 1);
+
+        if (destroyable)
+        {
+            testObject.AddComponent<DeleteComponent>();
+        }
     }
 
     private static void CreateBackground(GameLevel level, Vector2 position)
@@ -110,6 +115,25 @@ public class HeroController : Component
     public override void Start()
     {
         GameObject.GetComponent<SpriteAnimator>()?.PlayAnimation("Idle");
+    }
+}
+
+public class DeleteComponent : Component
+{
+    private float _time;
+
+    public DeleteComponent(GameObject gameObject) : base(gameObject)
+    {
+    }
+
+    public override void Update(float deltaTime)
+    {
+        _time += deltaTime;
+
+        if (_time >= 3)
+        {
+            GameObject.Destroy();
+        }
     }
 }
 

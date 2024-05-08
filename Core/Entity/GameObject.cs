@@ -9,6 +9,8 @@ namespace MyEngine2D.Core.Entity
 
         public readonly Transform Transform;
 
+        internal bool DestroyRequest;
+
         private readonly List<Component> _components;
 
         private bool _isStarted;
@@ -43,6 +45,11 @@ namespace MyEngine2D.Core.Entity
         {
             foreach (var component in _components)
                 component.FixedUpdate(fixedDeltaTime);
+        }
+
+        public void Destroy()
+        {
+            DestroyRequest = true;
         }
 
         public T AddComponent<T>() where T : Component

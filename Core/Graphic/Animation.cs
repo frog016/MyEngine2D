@@ -32,11 +32,6 @@ public sealed class Animation : IDisposable
     public void Dispose()
     {
         Stop();
-
-        foreach (var frame in _frames)
-        {
-            frame.Sprite.Dispose();
-        }
     }
 
     internal void Play(SpriteRenderer renderer)

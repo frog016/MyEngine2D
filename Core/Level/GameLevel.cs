@@ -23,8 +23,25 @@ public sealed class GameLevel
         return gameEntity;
     }
 
-    public void Destroy(GameObject gameObject)
+    public GameObject Instantiate(string name, Vector2 position = default, float rotation = default, params Action<GameObject>[] addComponentActions)
     {
+        var gameObject = new GameObject(name, position, rotation);
+        foreach (var component in addComponentActions)
+        {
+            component.Invoke(gameObject);
+        }
+
+        _gameObjects.Add(gameObject);
+        return gameObject;
+    }
+
+    internal void Destroy(GameObject gameObject)
+    {
+        if (gameObject.DestroyRequest == false)
+        {
+            throw new InvalidOperationException($"Can't destroy object: {gameObject}. Call {nameof(GameObject.Destroy)} before.");
+        }
+
         _gameObjects.Remove(gameObject);
         gameObject.Dispose();
     }
