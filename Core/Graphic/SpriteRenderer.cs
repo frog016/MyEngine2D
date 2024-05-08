@@ -38,6 +38,10 @@ public sealed class SpriteRenderer : SpriteComponent
         ? Vector2.Zero
         : Vector2.MultiplyComponentwise(Scale, Sprite.Size);
 
+    public Vector2 ScaledTextureSize => Sprite == null 
+        ? Vector2.Zero 
+        : Vector2.MultiplyComponentwise(Scale, Sprite.TextureSize);
+
     public event Action<SpriteRenderer, Layer, Layer> LayerChanged = delegate { }; 
 
     private Layer _layer;
@@ -106,7 +110,7 @@ public sealed class SpriteRenderer : SpriteComponent
     private RawRectangleF GetRenderTargetRectangle()
     {
         var center = Transform.Position + Offset;
-        var halfSize = ScaledSpriteSize / 2f;
+        var halfSize = ScaledTextureSize / 2f;
 
         var leftBottom = center - halfSize;
         var rightTop = center + halfSize;

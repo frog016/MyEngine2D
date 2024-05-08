@@ -65,15 +65,27 @@ namespace MyEngine2D.Core.Entity
             component.OnDestroy();
         }
 
-        public T? GetComponent<T>() where T : Component
+        public T GetComponent<T>() where T : Component
         {
-            return _components.FirstOrDefault(component => component.GetType() == typeof(T)) as T;
+            var component = _components.FirstOrDefault(component => component is T);
+            return component as T ?? throw new NullReferenceException($"{this} doesn't contains component: {typeof(T).Name}.");
         }
 
-        public bool TryGetComponent<T>(out T component) where T : Component
+        public bool TryGetComponent<T>(out T? component) where T : Component
         {
+            component = null;
+            if (ContainsComponent<T>() == false)
+            {
+                return false;
+            }
+
             component = GetComponent<T>();
-            return component != null;
+            return true;
+        }
+
+        public bool ContainsComponent<T>() where T : Component
+        {
+            return _components.Any(component => component is T);
         }
 
         public void Dispose()

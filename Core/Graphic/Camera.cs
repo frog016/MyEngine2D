@@ -46,9 +46,9 @@ public sealed class Camera : Component
     public static Camera CreateDefault(GameLevel level)
     {
         const string defaultName = "Camera";
-        const float defaultZoom = 10f;
+        const float defaultZoom = 5f;
 
-        var cameraObject = level.Instantiate(defaultName,new Structure.Vector2(600, 300));
+        var cameraObject = level.Instantiate(defaultName, Structure.Vector2.Zero);
         var camera = cameraObject.AddComponent<Camera>();
         camera.Initialize(defaultZoom);
 

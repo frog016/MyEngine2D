@@ -1,4 +1,5 @@
-﻿using MyEngine2D.Core.Graphic;
+﻿using MyEngine2D.Core.Entity;
+using MyEngine2D.Core.Graphic;
 using MyEngine2D.Core.Input;
 using MyEngine2D.Core.Level;
 using MyEngine2D.Core.Physic;
@@ -14,8 +15,9 @@ public sealed class Game : IDisposable
     private readonly InputSystem _inputSystem;
     private readonly PhysicWorld _physicWorld;
     private readonly GraphicRender _graphicRender;
-
     private readonly CancellationTokenSource _stopLoopSource;
+
+    private bool _runned;
 
     internal Game(
         Time time, GameLevelManager levelManager, InputSystem inputSystem,
@@ -38,6 +40,9 @@ public sealed class Game : IDisposable
 
     public void Dispose()   //  TODO: Добавить вызов Dispose
     {
+        _levelManager.CurrentLevel.GameObjects.Added -= StartGameObjectDelayed;
+
+        _runned = false;
         _stopLoopSource.Cancel();
         ServiceLocator.Instance.Dispose();
     }
@@ -51,10 +56,13 @@ public sealed class Game : IDisposable
         {
             gameObject.Start();
         }
+
+        _levelManager.CurrentLevel.GameObjects.Added += StartGameObjectDelayed;
     }
 
     private void RunLoop()
     {
+        _runned = true;
         while (_stopLoopSource.IsCancellationRequested == false)
         {
             _time.Tick();
@@ -99,5 +107,13 @@ public sealed class Game : IDisposable
     private void Render()
     {
         _graphicRender.Render();
+    }
+
+    private void StartGameObjectDelayed(GameObject gameObject)
+    {
+        if (_runned)
+        {
+            gameObject.Start();
+        }
     }
 }

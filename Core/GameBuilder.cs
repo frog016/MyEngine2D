@@ -9,7 +9,7 @@ namespace MyEngine2D.Core;
 
 public sealed class GameBuilder
 {
-    private readonly List<GameLevel> _levels = new();
+    private readonly List<Func<GameLevel>> _levels = new();
     private readonly List<InputActionBase> _inputActions = new();
     private readonly List<ResourceImporter> _resourceImporters = new();
 
@@ -23,22 +23,23 @@ public sealed class GameBuilder
             .ToArray();
     }
 
-    public GameBuilder WithConfiguredLevels()
+    public GameBuilder WithConfiguredLevels(params GameLevelConfigurator[] gameLevelConfigurators)
     {
-        var levelConfigurators = LevelConfiguratorTypes
-            .Select(Activator.CreateInstance)
-            .Cast<GameLevelConfigurator>();
-
-        var levels = levelConfigurators
+        var getLevelFunctions = gameLevelConfigurators
             .Select(configurator => configurator.CreateLevel());
 
-        _levels.AddRange(levels);
+        _levels.AddRange(getLevelFunctions);
         return this;
     }
 
     public GameBuilder WithCustomLevels(params GameLevel[] levels)
     {
-        _levels.AddRange(levels);
+        foreach (var level in levels)
+        {
+            var levelLink = level;
+            _levels.Add(() => levelLink);
+        }
+
         return this;
     }
 
@@ -57,18 +58,30 @@ public sealed class GameBuilder
     public Game Build()
     {
         var resourceManager = CreateResourceManager();
+        ServiceLocator.Instance.RegisterInstance(resourceManager);
 
         var time = new Time();
-        var levelManager = CreateLevelManager();
+        ServiceLocator.Instance.RegisterInstance(time);
+
         var inputSystem = CreateInputSystem();
-        var physicWorld = new PhysicWorld(levelManager);
-        var graphicRender = CreateGraphicRender(levelManager);
+        ServiceLocator.Instance.RegisterInstance(inputSystem);
+
+        var lazyLevelManager = new Lazy<GameLevelManager>(() =>
+            ServiceLocator.Instance.Get<GameLevelManager>());
+
+        var physicWorld = new PhysicWorld(lazyLevelManager);
+        ServiceLocator.Instance.RegisterInstance(physicWorld);
+
+        var graphicRender = CreateGraphicRender(lazyLevelManager);
+        ServiceLocator.Instance.RegisterInstance(graphicRender);
+
+        var levelManager = CreateLevelManager();
+        ServiceLocator.Instance.RegisterInstance(levelManager);
 
         var game = new Game(time, levelManager, inputSystem, physicWorld, graphicRender);
+        ServiceLocator.Instance.RegisterInstance(game);
 
-        RegisterGameServices(time, levelManager, inputSystem, game, resourceManager, graphicRender);
         Clear();
-
         return game;
     }
 
@@ -88,7 +101,10 @@ public sealed class GameBuilder
 
     private GameLevelManager CreateLevelManager()
     {
-        var levels = _levels.ToArray();
+        var levels = _levels
+            .Select(getLevel => getLevel())
+            .ToArray();
+
         return new GameLevelManager(levels);
     }
 
@@ -112,20 +128,9 @@ public sealed class GameBuilder
         yield return new SpriteResourceImporter();
     }
 
-    private static GraphicRender CreateGraphicRender(GameLevelManager levelManager)
+    private static GraphicRender CreateGraphicRender(Lazy<GameLevelManager> lazyLevelManager)
     {
         var description = new GraphicWindowDescription(1920, 1080);
-        return new GraphicRender(levelManager, description);
-    }
-
-    private static void RegisterGameServices(Time time, GameLevelManager levelManager, InputSystem inputSystem,
-        Game game, ResourceManager resourceManager, GraphicRender graphicRender)
-    {
-        ServiceLocator.Instance.RegisterInstance(time);
-        ServiceLocator.Instance.RegisterInstance(levelManager);
-        ServiceLocator.Instance.RegisterInstance(inputSystem);
-        ServiceLocator.Instance.RegisterInstance(game);
-        ServiceLocator.Instance.RegisterInstance(resourceManager);
-        ServiceLocator.Instance.RegisterInstance(graphicRender);
+        return new GraphicRender(lazyLevelManager, description);
     }
 }

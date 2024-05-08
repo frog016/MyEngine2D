@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyEngine2D", "MyEngine2D.csproj", "{3C9F5862-CD5C-40C7-9045-F11CB1FC981B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyEngine2D", "MyEngine2D.csproj", "{3C9F5862-CD5C-40C7-9045-F11CB1FC981B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

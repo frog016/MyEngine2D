@@ -5,13 +5,14 @@ namespace MyEngine2D.Core.Physic;
 
 public sealed class PhysicWorld
 {
-    private readonly GameLevelManager _levelManager;
+    private readonly Lazy<GameLevelManager> _levelManager;
 
     private static readonly HashSet<(RigidBody, RigidBody)> CollidingBodyPairCache = new();
 
+    private GameLevelManager LevelManager => _levelManager.Value;
     private ICollisionResolutionMethod _collisionResolution = new ImpulseCollisionResolutionMethod();
 
-    public PhysicWorld(GameLevelManager levelManager)
+    public PhysicWorld(Lazy<GameLevelManager> levelManager)
     {
         _levelManager = levelManager;
     }
@@ -55,7 +56,7 @@ public sealed class PhysicWorld
 
     private IEnumerable<RigidBody> GetWorldPhysicObjects()
     {
-        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        foreach (var gameObject in LevelManager.CurrentLevel.GameObjects)
         {
             if (gameObject.TryGetComponent<RigidBody>(out var body))
             {

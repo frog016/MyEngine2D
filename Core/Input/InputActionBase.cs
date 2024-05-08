@@ -2,5 +2,7 @@
 
 public abstract class InputActionBase
 {
+    public bool WasPressedThisFrame { get; internal set; }
+
     public abstract bool IsPressed();
 }

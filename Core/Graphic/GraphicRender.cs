@@ -12,26 +12,27 @@ namespace MyEngine2D.Core.Graphic;
 public sealed class GraphicRender : IDisposable
 {
     public Structure.Vector2 ScreenSize => RenderTarget.Size.ToVector2();
+    public SharpDX.Color DefaultBackgroundColor { get; set; } = new(0, 0, 0);
 
     internal readonly DX2D1.RenderTarget RenderTarget;
 
-    private readonly GameLevelManager _levelManager;
+    private readonly Lazy<GameLevelManager> _levelManager;
     private readonly RenderForm _window;
     private readonly RenderLoop _renderLoop;
     private readonly DX2D1.Factory _factory;
     private readonly DX2D1.Brush _brush;
     private readonly DX2D1.Brush _debugBrush;
 
+    private GameLevelManager LevelManager => _levelManager.Value;
     private RenderLayer _renderLayer;
     private Camera _renderCamera;
 
-    private static readonly SharpDX.Color DefaultBackgroundColor = new(0, 0, 0);
     private static readonly SharpDX.Color DefaultShapeColor = new(30, 30, 30);
     private static readonly SharpDX.Color DefaultDebugColor = new(255, 0, 0);
 
     private const float DebugPointSize = 4f;
 
-    internal GraphicRender(GameLevelManager levelManager, GraphicWindowDescription description)
+    internal GraphicRender(Lazy<GameLevelManager> levelManager, GraphicWindowDescription description)
     {
         _levelManager = levelManager;
         _window = new RenderForm(description.Header)
@@ -50,11 +51,11 @@ public sealed class GraphicRender : IDisposable
 
     internal void Run()
     {
-        _renderLayer = new RenderLayer(_levelManager.CurrentLevel.GameObjects);
-        _renderCamera = _levelManager.CurrentLevel.GameObjects.FindByType<Camera>();
+        _renderLayer = new RenderLayer(LevelManager.CurrentLevel.GameObjects);
+        _renderCamera = LevelManager.CurrentLevel.GameObjects.FindByType<Camera>();
 
-        _levelManager.CurrentLevel.GameObjects.Added += OnObjectAdded;
-        _levelManager.CurrentLevel.GameObjects.Removed += OnObjectRemoved;
+        LevelManager.CurrentLevel.GameObjects.Added += OnObjectAdded;
+        LevelManager.CurrentLevel.GameObjects.Removed += OnObjectRemoved;
 
         _window.Show();
     }
@@ -97,10 +98,22 @@ public sealed class GraphicRender : IDisposable
         RenderTarget.DrawLine(start.ToRawVector2(), end.ToRawVector2(), _debugBrush, width);
     }
 
+    public void DrawDebugCircle(Structure.Vector2 center, float radius, float width = DebugPointSize)
+    {
+        RenderTarget.BeginDraw();
+        RenderTarget.DrawEllipse(new DX2D1.Ellipse(center.ToDXVector2(), radius, radius), _debugBrush, width);
+        RenderTarget.EndDraw();
+    }
+
+    public void DrawDebugCircleInProcess(Structure.Vector2 center, float radius, float width = DebugPointSize)
+    {
+        RenderTarget.DrawEllipse(new DX2D1.Ellipse(center.ToDXVector2(), radius, radius), _debugBrush, width);
+    }
+
     public void Dispose()
     {
-        _levelManager.CurrentLevel.GameObjects.Added -= OnObjectAdded;
-        _levelManager.CurrentLevel.GameObjects.Removed -= OnObjectRemoved;
+        LevelManager.CurrentLevel.GameObjects.Added -= OnObjectAdded;
+        LevelManager.CurrentLevel.GameObjects.Removed -= OnObjectRemoved;
 
         RenderTarget.Dispose();
         _renderLayer.Dispose();

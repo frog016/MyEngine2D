@@ -2,5 +2,10 @@
 
 public abstract class GameLevelConfigurator
 {
-    public abstract GameLevel CreateLevel();
+    public Func<GameLevel> CreateLevel()
+    {
+        return CreateConfiguredLevel;
+    }
+
+    protected abstract GameLevel CreateConfiguredLevel();
 }

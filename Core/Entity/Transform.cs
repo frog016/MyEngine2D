@@ -11,4 +11,9 @@ public class Transform : Component
     public Transform(GameObject gameObject) : base(gameObject)
     {
     }
+
+    public Vector2 GetForwardVector()
+    {
+        return Vector2.Right.Rotate(Rotation);
+    }
 }

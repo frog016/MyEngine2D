@@ -55,7 +55,7 @@ public sealed class Sprite : IDisposable
     {
         var bitmapData = bitmap.LockBits(sourceArea, ImageLockMode.ReadOnly, PixelFormat.Format32bppPArgb);
 
-        for (var y = bitmap.Height - 1; y > 0; y--)
+        for (var y = bitmap.Height - 1; y >= 0; y--)
         {
             var offset = bitmapData.Stride * y;
             for (var x = 0; x < bitmap.Width; x++)

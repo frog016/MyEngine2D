@@ -10,7 +10,7 @@ public sealed class InputSystem
         AddInput((InputActionBase)action);
     }
 
-    public void AddInput(InputActionBase action) 
+    public void AddInput(InputActionBase action)
     {
         var actionType = action.GetType();
 
@@ -60,13 +60,20 @@ public sealed class InputSystem
 
     internal void UpdateInput()
     {
-        foreach (var (action, listeners) in _inputListeners)
+        foreach (var (type, inputAction) in _inputActions)
         {
-            if (action.IsPressed() == false)
-                continue;
+            var isPressed = inputAction.IsPressed();
+            inputAction.WasPressedThisFrame = isPressed;
 
-            foreach (var listener in listeners) 
+            if (isPressed == false || _inputListeners.TryGetValue(inputAction, out var listeners) == false)
+            {
+                continue;
+            }
+
+            foreach (var listener in listeners)
+            {
                 listener.Invoke();
+            }
         }
     }
 }

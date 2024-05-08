@@ -64,6 +64,20 @@ public sealed class RigidBody : Component
         _torque += Vector2.CrossProduct(point - Position, force);
     }
 
+    public void ApplyForce(Vector2 force)
+    {
+        var point = Position;
+        ApplyForce(force, point);
+    }
+
+    public void ApplyTorque(float torque)
+    {
+        if (IsStatic)
+            return;
+
+        _torque += torque;
+    }
+
     public void SetMass(float value = default)
     {
         var mass = _computeMassMode switch
