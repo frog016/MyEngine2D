@@ -85,7 +85,7 @@ public sealed class Game : IDisposable
     {
         var deltaTime = _time.DeltaTime;
 
-        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+        foreach (var gameObject in _levelManager.CurrentLevel.GameObjects.ToArray())
         {
             gameObject.UpdateObject(deltaTime);
         }
@@ -97,7 +97,7 @@ public sealed class Game : IDisposable
         {
             _physicWorld.UpdatePhysic(Time.FixedUpdateTimestamp);
 
-            foreach (var gameObject in _levelManager.CurrentLevel.GameObjects)
+            foreach (var gameObject in _levelManager.CurrentLevel.GameObjects.ToArray())
             {
                 gameObject.FixedUpdateObject(Time.FixedUpdateTimestamp);
             }

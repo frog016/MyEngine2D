@@ -7,6 +7,7 @@ public sealed class RigidBody : Component
 {
     public IPhysicShape Shape { get; private set; }
     public PhysicMaterial Material { get; private set; }
+    public ConcreteLayer CollisionLayer { get; private set; }
 
     public bool IsStatic { get; set; }
     public float GravityScale { get; set; }
@@ -21,6 +22,7 @@ public sealed class RigidBody : Component
 
     public Vector2 Position { get => GameObject.Transform.Position; set => GameObject.Transform.Position = value; }
     public float Rotation { get => GameObject.Transform.Rotation; set => GameObject.Transform.Rotation = value; }
+    public event Action<Contact> BodyCollided; 
 
     public const float Gravity = 9.80665f;
 
@@ -35,12 +37,13 @@ public sealed class RigidBody : Component
 
     public void Initialize(IPhysicShape shape, PhysicMaterial material,
         float manuallyMass = 0f, ComputeMassMode massMode = ComputeMassMode.ByShape, 
-        float gravityScale = 1f, bool isStatic = false)
+        float gravityScale = 1f, bool isStatic = false, ConcreteLayer? layer = default)
     {
         Shape = shape;
         Material = material;
         IsStatic = isStatic;
         GravityScale = gravityScale;
+        CollisionLayer = layer ?? ConcreteLayer.Default;
 
         SetMassMode(massMode);
         SetMass(manuallyMass);
@@ -123,6 +126,11 @@ public sealed class RigidBody : Component
     {
         _externalForce = Vector2.Zero;
         _torque = 0;
+    }
+
+    internal void RaiseBodyCollisionEvent(Contact contact)
+    {
+        BodyCollided?.Invoke(contact);
     }
 
     private void UpdateGravity(float deltaTime)

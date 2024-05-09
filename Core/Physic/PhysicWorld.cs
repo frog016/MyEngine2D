@@ -5,6 +5,8 @@ namespace MyEngine2D.Core.Physic;
 
 public sealed class PhysicWorld
 {
+    public readonly PhysicLayerSystem LayerSystem;
+
     private readonly Lazy<GameLevelManager> _levelManager;
 
     private static readonly HashSet<(RigidBody, RigidBody)> CollidingBodyPairCache = new();
@@ -12,9 +14,10 @@ public sealed class PhysicWorld
     private GameLevelManager LevelManager => _levelManager.Value;
     private ICollisionResolutionMethod _collisionResolution = new ImpulseCollisionResolutionMethod();
 
-    public PhysicWorld(Lazy<GameLevelManager> levelManager)
+    internal PhysicWorld(PhysicLayerSystem layerSystem, Lazy<GameLevelManager> levelManager)
     {
         _levelManager = levelManager;
+        LayerSystem = layerSystem;
     }
 
     public void SetCollisionMethod(ICollisionResolutionMethod collisionResolution)
@@ -47,6 +50,13 @@ public sealed class PhysicWorld
             CorrectCollisionContactPositions(collisionContact);
         }
 
+        //  send collision event for collided bodies
+        foreach (var collisionContact in collisionContacts)
+        {
+            collisionContact.First.RaiseBodyCollisionEvent(collisionContact);
+            collisionContact.Second.RaiseBodyCollisionEvent(collisionContact);
+        }
+
         //  reset forces
         foreach (var body in physicObjects)
         {
@@ -71,7 +81,7 @@ public sealed class PhysicWorld
     }
 
     //  Broad phase
-    private static IEnumerable<(RigidBody first, RigidBody second)> GetPotentialCollidingObjectPairs(RigidBody[] physicBodies)
+    private IEnumerable<(RigidBody first, RigidBody second)> GetPotentialCollidingObjectPairs(RigidBody[] physicBodies)
     {
         foreach (var body in physicBodies)
         {
@@ -83,6 +93,11 @@ public sealed class PhysicWorld
             foreach (var otherBody in physicBodies)
             {
                 if (body == otherBody)
+                {
+                    continue;
+                }
+
+                if (LayerSystem.LayersColliding(body.CollisionLayer, otherBody.CollisionLayer) == false)
                 {
                     continue;
                 }

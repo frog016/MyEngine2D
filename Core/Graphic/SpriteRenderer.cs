@@ -1,6 +1,5 @@
 ﻿using MyEngine2D.Core.Entity;
 using MyEngine2D.Core.Math;
-using MyEngine2D.Core.Physic;
 using MyEngine2D.Core.Resource;
 using MyEngine2D.Core.Structure;
 using MyEngine2D.Core.Utility;
@@ -31,7 +30,7 @@ public sealed class SpriteRenderer : SpriteComponent
 
     public float Opacity
     {
-        get => _opacity; 
+        get => _opacity;
         set => _opacity = Math2D.Clamp(value, 0, 1);
     }
 
@@ -39,16 +38,16 @@ public sealed class SpriteRenderer : SpriteComponent
         ? Vector2.Zero
         : Vector2.MultiplyComponentwise(Scale, Sprite.Size);
 
-    public Vector2 ScaledTextureSize => Sprite == null 
-        ? Vector2.Zero 
+    public Vector2 ScaledTextureSize => Sprite == null
+        ? Vector2.Zero
         : Vector2.MultiplyComponentwise(Scale, Sprite.TextureSize);
 
-    public event Action<SpriteRenderer, Layer, Layer> LayerChanged = delegate { }; 
+    public event Action<SpriteRenderer, Layer, Layer> LayerChanged = delegate { };
 
     private Layer _layer;
     private float _opacity;
 
-    public SpriteRenderer(GameObject gameObject, ResourceManager resourceManager, GraphicRender graphicRender) 
+    public SpriteRenderer(GameObject gameObject, ResourceManager resourceManager, GraphicRender graphicRender)
         : base(gameObject, resourceManager, graphicRender)
     {
         Scale = Vector2.One;
@@ -99,29 +98,6 @@ public sealed class SpriteRenderer : SpriteComponent
         renderTarget.Transform = Matrix3x2.Rotation(Transform.Rotation, Transform.Position.ToDXVector2()) * renderTransformMatrix;
         renderTarget.DrawBitmap(Sprite.DirectBitmap, destinationRectangle, Opacity, DX2D1.BitmapInterpolationMode.Linear);
         renderTarget.Transform = renderTransformMatrix;
-
-        DrawDebugPhysicForm();
-    }
-
-    private void DrawDebugPhysicForm()
-    {
-        if (GameObject.TryGetComponent<RigidBody>(out var rigidBody) == false)
-        {
-            return;
-        }
-
-        switch (rigidBody.Shape)
-        {
-            case CirclePhysicShape circlePhysicShape:
-                GraphicRender.DrawDebugCircleInProcess(circlePhysicShape.Center, circlePhysicShape.Radius, 0.01f);
-                break;
-            case RectanglePhysicShape rectanglePhysicShape:
-                GraphicRender.DrawDebugRectangleInProcess(rectanglePhysicShape.GetBoundingBox(), 0.01f);
-
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
     }
 
     private RawRectangleF GetRenderTargetRectangle()

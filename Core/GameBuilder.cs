@@ -12,6 +12,7 @@ public sealed class GameBuilder
     private readonly List<Func<GameLevel>> _levels = new();
     private readonly List<InputActionBase> _inputActions = new();
     private readonly List<ResourceImporter> _resourceImporters = new();
+    private readonly List<LayerCollisionSetting> _physicCollisionLayers = new();
 
     private static readonly Type[] LevelConfiguratorTypes;
 
@@ -55,6 +56,12 @@ public sealed class GameBuilder
         return this;
     }
 
+    public GameBuilder WithPhysicLayers(params LayerCollisionSetting[] layerCollisionSettings)
+    {
+        _physicCollisionLayers.AddRange(layerCollisionSettings);
+        return this;
+    }
+
     public Game Build()
     {
         var resourceManager = CreateResourceManager();
@@ -69,7 +76,7 @@ public sealed class GameBuilder
         var lazyLevelManager = new Lazy<GameLevelManager>(() =>
             ServiceLocator.Instance.Get<GameLevelManager>());
 
-        var physicWorld = new PhysicWorld(lazyLevelManager);
+        var physicWorld = CreatePhysicWorld(lazyLevelManager);
         ServiceLocator.Instance.RegisterInstance(physicWorld);
 
         var graphicRender = CreateGraphicRender(lazyLevelManager);
@@ -83,6 +90,14 @@ public sealed class GameBuilder
 
         Clear();
         return game;
+    }
+
+    private void Clear()
+    {
+        _levels.Clear();
+        _inputActions.Clear();
+        _resourceImporters.Clear();
+        _physicCollisionLayers.Clear();
     }
 
     private ResourceManager CreateResourceManager()
@@ -117,10 +132,16 @@ public sealed class GameBuilder
         return inputSystem;
     }
 
-    private void Clear()
+    private PhysicWorld CreatePhysicWorld(Lazy<GameLevelManager> lazyLevelManager)
     {
-        _levels.Clear();
-        _inputActions.Clear();
+        if (_physicCollisionLayers.Count == 0)
+        {
+            var defaultLayerCollisionSetting = new LayerCollisionSetting(ConcreteLayer.Default, ConcreteLayer.Default);
+            _physicCollisionLayers.Add(defaultLayerCollisionSetting);
+        }
+
+        var physicLayerSystem = new PhysicLayerSystem(_physicCollisionLayers.ToArray());
+        return new PhysicWorld(physicLayerSystem, lazyLevelManager);
     }
 
     private static IEnumerable<ResourceImporter> GetDefaultRecourseImporters()
